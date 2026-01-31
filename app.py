@@ -9,7 +9,6 @@ import json
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import re
-from pathlib import Path
 
 # ==============================
 # CONFIG PAGE
@@ -55,6 +54,25 @@ st.markdown("""
     margin: 30px 0;
 }
 
+.step {
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.xml-box {
+    background: #ecf9f1;
+    border-left: 5px solid #2ecc71;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.json-box {
+    background: #eef5fb;
+    border-left: 5px solid #3498db;
+    padding: 12px;
+    border-radius: 8px;
+}
+
 .success-box {
     background: linear-gradient(135deg, #84fab0, #8fd3f4);
     padding: 20px;
@@ -76,16 +94,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================
-# SESSION STATE SAFE INIT
+# SESSION STATE INIT
 # ==============================
-if "content" not in st.session_state:
-    st.session_state["content"] = ""
-
-if "filename" not in st.session_state:
-    st.session_state["filename"] = "fichier.txt"
-
-if "action" not in st.session_state:
-    st.session_state["action"] = None
+for key, value in {
+    "content": "",
+    "file_type": None,
+    "validated": False,
+    "has_errors": False
+}.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 # ==============================
 # UTILS
@@ -124,7 +142,7 @@ def auto_correct(content):
 # ==============================
 def main():
 
-    # HEADER
+    # 1️⃣ HEADER
     try:
         st.image("images/codex3-V2.png", use_column_width=True)
     except:
@@ -134,63 +152,73 @@ def main():
     st.markdown('<p class="subtitle">Configs DayZ propres & lisibles</p><div class="dayz-tag">🎮 Communauté FR</div>', unsafe_allow_html=True)
     st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
-    # ACTIONS
-    col1, col2, col3, col4 = st.columns(4)
+    # 2️⃣ UPLOAD
+    st.markdown("### 1️⃣ Dépôt du fichier")
 
-    with col1:
-        if st.button("XML"): st.session_state["action"] = "xml"
-    with col2:
-        if st.button("JSON"): st.session_state["action"] = "json"
-    with col3:
-        if st.button("🔧 Corriger"): st.session_state["action"] = "correct"
-    with col4:
-        if st.button("🗑️ Clear"): st.session_state["action"] = "clear"
+    if not st.session_state.validated:
+        uploaded = st.file_uploader("📂 Glisse ton fichier XML ou JSON", type=["xml", "json"])
+        if uploaded:
+            st.session_state.content = uploaded.read().decode("utf-8")
+            st.session_state.file_type = uploaded.name.split(".")[-1].lower()
+    else:
+        st.success("📁 Fichier chargé — étape verrouillée")
 
-    st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+    # 3️⃣ BOUTON VALIDATION
+    if st.session_state.file_type and not st.session_state.validated:
+        st.markdown("### 2️⃣ Validation")
 
-    # UPLOAD
-    uploaded = st.file_uploader("📤 Dépose ton fichier", type=["xml", "json", "txt"])
-    if uploaded:
-        st.session_state["content"] = uploaded.read().decode("utf-8")
-        st.session_state["filename"] = uploaded.name
+        if st.session_state.file_type == "xml":
+            st.markdown("<div class='xml-box'>📄 Fichier XML détecté</div>", unsafe_allow_html=True)
+            if st.button("✅ Valider le XML"):
+                valid, msg, formatted, highlighted = validate_xml(st.session_state.content)
+                st.session_state.validated = True
+                st.session_state.has_errors = not valid
+                st.session_state.result = (valid, msg, formatted, highlighted)
 
-    st.session_state["content"] = st.text_area(
-        "📝 Ton fichier",
-        value=st.session_state["content"],
-        height=350
-    )
+        elif st.session_state.file_type == "json":
+            st.markdown("<div class='json-box'>📄 Fichier JSON détecté</div>", unsafe_allow_html=True)
+            if st.button("✅ Valider le JSON"):
+                valid, msg, formatted, highlighted = validate_json(st.session_state.content)
+                st.session_state.validated = True
+                st.session_state.has_errors = not valid
+                st.session_state.result = (valid, msg, formatted, highlighted)
 
-    # LOGIQUE ACTION
-    action = st.session_state["action"]
-    content = st.session_state["content"]
+    # 4️⃣ RÉSULTAT + APERÇU
+    if st.session_state.validated:
+        st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+        st.markdown("### 3️⃣ Résultat & aperçu")
 
-    if action == "clear":
-        st.session_state.clear()
-        st.rerun()
-
-    if action in ("xml", "json") and content.strip():
-        valid, msg, formatted, highlighted = (
-            validate_xml(content) if action == "xml" else validate_json(content)
-        )
+        valid, msg, formatted, highlighted = st.session_state.result
 
         if valid:
-            st.markdown(f'<div class="success-box">{msg}</div>', unsafe_allow_html=True)
-            st.code(formatted, language=action)
+            st.markdown(f"<div class='success-box'>{msg}</div>", unsafe_allow_html=True)
+            st.code(formatted, language=st.session_state.file_type)
         else:
-            st.markdown(f'<div class="error-box">{msg}</div>', unsafe_allow_html=True)
-            st.code(highlighted, language=action)
+            st.markdown(f"<div class='error-box'>{msg}</div>", unsafe_allow_html=True)
+            st.code(highlighted, language=st.session_state.file_type)
 
-    if action == "correct" and content.strip():
-        corrected = auto_correct(content)
-        st.session_state["content"] = corrected
-        st.success("✅ Correction appliquée")
-        st.rerun()
+    # 5️⃣ ACTIONS FINALES
+    if st.session_state.validated:
+        st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+        st.markdown("### 🛠️ Actions")
 
-    st.session_state["action"] = None
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.session_state.has_errors:
+                if st.button("🔧 Corriger automatiquement"):
+                    st.session_state.content = auto_correct(st.session_state.content)
+                    st.session_state.validated = False
+                    st.rerun()
+
+        with col2:
+            if st.button("♻️ Réinitialiser"):
+                st.session_state.clear()
+                st.rerun()
 
     # FOOTER
     st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="footer">Par EpSy ❤️ | Discord DayZ FR</div>', unsafe_allow_html=True)
+    st.markdown('<div class="footer">Par EpSy ❤️ | Codex DayZ FR</div>', unsafe_allow_html=True)
 
 # ==============================
 # RUN
