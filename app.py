@@ -428,13 +428,8 @@ def main():
     col1, col2, col3, col4 = st.columns(4)  # 4 colonnes au lieu de 5
     
     with col1:
-        try:
-            # L'image devient le bouton grâce au CSS
-            if st.button(" ", key="xml", help="Valider XML"):
-                st.session_state.action = "xml"
-            st.image("images/xml.png", use_container_width=True)
-        except:
-            if st.button("</> XML", key="xml_fallback"):
+        st.image("images/xml.png", use_column_width=True)
+            if st.button("</> XML", key="xml", use_container_width=True):
                 st.session_state.action = "xml"
     
     with col2:
