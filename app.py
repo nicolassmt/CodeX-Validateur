@@ -1,8 +1,7 @@
 """
 Codex Validateur XML/JSON
-L'outil indispensable pour vérifier vos fichiers de configuration DayZ
-Créé par EpSy pour la communauté francophone DayZ
-VERSION ULTIME - Images cliquables + Surlignage erreurs + Correction en place
+Outil de validation pour fichiers DayZ
+Créé par EpSy – Communauté DayZ Francophone
 """
 
 import streamlit as st
@@ -12,9 +11,9 @@ from xml.dom import minidom
 import re
 from pathlib import Path
 
-# =============================
-# CONFIGURATION PAGE
-# =============================
+# ==============================
+# CONFIG PAGE
+# ==============================
 st.set_page_config(
     page_title="Codex Validateur XML/JSON",
     page_icon="🎮",
@@ -22,54 +21,50 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# =============================
-# STYLE CSS
-# =============================
+# ==============================
+# CSS
+# ==============================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 * { font-family: 'Inter', sans-serif; }
 
-.main { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; }
-.block-container { background-color: #ffffff; border-radius: 20px; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-
-.main-title { color: #2d3748; font-size: 2.5em; font-weight: 700; margin: 10px 0; }
-.subtitle { color: #718096; font-size: 1.1em; margin-bottom: 10px; }
-.dayz-tag { display:inline-block; background:linear-gradient(135deg,#667eea,#764ba2); color:white; padding:8px 20px; border-radius:20px; font-weight:600; }
-
-.stTextArea textarea {
-    border-radius: 12px;
-    border: 2px solid #e2e8f0;
-    font-family: Consolas, monospace;
-    font-size: 14px;
+.block-container {
+    background-color: #ffffff;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
 }
 
-.success-box {
-    background: linear-gradient(135deg,#84fab0,#8fd3f4);
-    padding: 25px;
-    border-radius: 15px;
-    margin: 20px 0;
-}
+.main-title { font-size: 2.5em; font-weight: 700; color: #2d3748; }
+.subtitle { color: #718096; margin-bottom: 10px; }
 
-.error-box {
-    background: linear-gradient(135deg,#fa709a,#fee140);
-    padding: 25px;
-    border-radius: 15px;
-    margin: 20px 0;
-}
-
-.suggestion-box {
-    background: linear-gradient(135deg,#ffecd2,#fcb69f);
-    padding: 20px;
-    border-radius: 15px;
-    margin: 15px 0;
+.dayz-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
 }
 
 .separator {
     height: 3px;
-    background: linear-gradient(90deg,#667eea,#764ba2);
-    margin: 30px 0;
+    background: linear-gradient(90deg, #667eea, #764ba2);
     border-radius: 2px;
+    margin: 30px 0;
+}
+
+.success-box {
+    background: linear-gradient(135deg, #84fab0, #8fd3f4);
+    padding: 20px;
+    border-radius: 15px;
+}
+
+.error-box {
+    background: linear-gradient(135deg, #fa709a, #fee140);
+    padding: 20px;
+    border-radius: 15px;
 }
 
 .footer {
@@ -77,181 +72,128 @@ st.markdown("""
     margin-top: 40px;
     color: #718096;
 }
-
-.discord-link {
-    display:inline-block;
-    background:#5865F2;
-    color:white;
-    padding:12px 30px;
-    border-radius:25px;
-    text-decoration:none;
-    font-weight:600;
-}
 </style>
 """, unsafe_allow_html=True)
 
-# =============================
-# OUTILS
-# =============================
-def highlight_error_line(content, error=None):
+# ==============================
+# SESSION STATE SAFE INIT
+# ==============================
+if "content" not in st.session_state:
+    st.session_state["content"] = ""
+
+if "filename" not in st.session_state:
+    st.session_state["filename"] = "fichier.txt"
+
+if "action" not in st.session_state:
+    st.session_state["action"] = None
+
+# ==============================
+# UTILS
+# ==============================
+def highlight_error_line(content, error):
     lines = content.splitlines()
     if hasattr(error, "lineno") and 1 <= error.lineno <= len(lines):
-        idx = error.lineno - 1
-        lines[idx] = f"🔴 ERREUR ICI >>> {lines[idx]}"
+        i = error.lineno - 1
+        lines[i] = f"🔴 ERREUR ICI → {lines[i]}"
     return "\n".join(lines)
-
-def analyze_xml_error(error):
-    suggestions = []
-    msg = str(error).lower()
-    if "mismatched" in msg:
-        suggestions.append("Balise ouverte / fermée incorrecte")
-    if "not well-formed" in msg:
-        suggestions.append("Caractère non échappé (& → &amp;)")
-    return suggestions
-
-def analyze_json_error(content, error):
-    suggestions = []
-    if error.lineno:
-        suggestions.append(f"Ligne {error.lineno}: {content.splitlines()[error.lineno-1]}")
-    msg = str(error).lower()
-    if "comma" in msg:
-        suggestions.append("Virgule en trop ou manquante")
-    if "brace" in msg or "bracket" in msg:
-        suggestions.append("Accolade ou crochet non fermé")
-    return suggestions
 
 def validate_xml(content):
     try:
         ET.fromstring(content)
         pretty = minidom.parseString(content).toprettyxml(indent="  ")
-        pretty = "\n".join(l for l in pretty.splitlines() if l.strip())
-        return True, "XML valide ✅", pretty, None, []
+        return True, "✅ XML valide", pretty, ""
     except ET.ParseError as e:
-        return False, str(e), None, highlight_error_line(content, e), analyze_xml_error(e)
+        return False, f"❌ Erreur XML : {e}", "", highlight_error_line(content, e)
 
 def validate_json(content):
     try:
         data = json.loads(content)
         pretty = json.dumps(data, indent=2, ensure_ascii=False)
-        return True, "JSON valide ✅", pretty, None, []
+        return True, "✅ JSON valide", pretty, ""
     except json.JSONDecodeError as e:
-        return False, str(e), None, highlight_error_line(content, e), analyze_json_error(content, e)
+        return False, f"❌ Erreur JSON ligne {e.lineno}", "", highlight_error_line(content, e)
 
 def auto_correct(content):
-    corrected = content
-    fixes = []
+    corrected = content.replace("'", '"')
+    corrected = re.sub(r',\s*([}\]])', r'\1', corrected)
+    corrected = re.sub(r'&(?!(amp|lt|gt|quot|apos);)', '&amp;', corrected)
+    return corrected
 
-    if content.strip().startswith(("{", "[")):
-        if "'" in corrected:
-            corrected = corrected.replace("'", '"')
-            fixes.append("Guillemets simples remplacés")
-        corrected = re.sub(r",\s*([}\]])", r"\1", corrected)
-
-    corrected = re.sub(r"&(?!(amp|lt|gt|quot|apos);)", "&amp;", corrected)
-
-    return corrected, fixes
-
-# =============================
-# APP
-# =============================
+# ==============================
+# MAIN
+# ==============================
 def main():
 
-    if "content" not in st.session_state:
-        st.session_state.content = ""
+    # HEADER
+    try:
+        st.image("images/codex3-V2.png", use_column_width=True)
+    except:
+        pass
 
-    if "filename" not in st.session_state:
-        st.session_state.filename = "fichier.txt"
-
-    # HEADER LOGO SÉCURISÉ
-    logo = Path("images/codex3-V2.png")
-    if logo.exists():
-        st.image(str(logo), use_container_width=True)
-    else:
-        st.warning("⚠️ Logo introuvable : images/codex3-V2.png")
-
-    st.markdown("<h1 class='main-title'>Codex Validateur XML / JSON</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='subtitle'>Configs DayZ claires, propres et sans stress</p>", unsafe_allow_html=True)
-    st.markdown("<div class='dayz-tag'>🎮 Communauté DayZ FR</div>", unsafe_allow_html=True)
-    st.markdown("<div class='separator'></div>", unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title">Codex Validateur XML/JSON</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Configs DayZ propres & lisibles</p><div class="dayz-tag">🎮 Communauté FR</div>', unsafe_allow_html=True)
+    st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
     # ACTIONS
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.image("images/xml.png", use_container_width=True)
-        if st.button("Valider XML"):
-            st.session_state.action = "xml"
-
+        if st.button("XML"): st.session_state["action"] = "xml"
     with col2:
-        st.image("images/json.png", use_container_width=True)
-        if st.button("Valider JSON"):
-            st.session_state.action = "json"
-
+        if st.button("JSON"): st.session_state["action"] = "json"
     with col3:
-        st.image("images/auto_corriger.png", use_container_width=True)
-        if st.button("Auto-corriger"):
-            st.session_state.action = "correct"
-
+        if st.button("🔧 Corriger"): st.session_state["action"] = "correct"
     with col4:
-        st.image("images/effacer.png", use_container_width=True)
-        if st.button("Effacer"):
-            st.session_state.action = "clear"
+        if st.button("🗑️ Clear"): st.session_state["action"] = "clear"
 
-    st.markdown("<div class='separator'></div>", unsafe_allow_html=True)
+    st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
-    uploaded = st.file_uploader("📤 Charger un fichier", type=["xml", "json", "txt"])
+    # UPLOAD
+    uploaded = st.file_uploader("📤 Dépose ton fichier", type=["xml", "json", "txt"])
     if uploaded:
-        st.session_state.content = uploaded.read().decode("utf-8")
-        st.session_state.filename = uploaded.name
+        st.session_state["content"] = uploaded.read().decode("utf-8")
+        st.session_state["filename"] = uploaded.name
 
-    st.session_state.content = st.text_area(
-        "📝 Contenu du fichier",
-        value=st.session_state.content,
+    st.session_state["content"] = st.text_area(
+        "📝 Ton fichier",
+        value=st.session_state["content"],
         height=350
     )
 
-    if "action" in st.session_state:
-        action = st.session_state.action
-        content = st.session_state.content
+    # LOGIQUE ACTION
+    action = st.session_state["action"]
+    content = st.session_state["content"]
 
-        if action == "clear":
-            st.session_state.content = ""
-            st.session_state.filename = "fichier.txt"
-            st.rerun()
-
-        if action == "correct" and content.strip():
-            corrected, fixes = auto_correct(content)
-            st.session_state.content = corrected
-            st.success("Correction appliquée ✅")
-            if fixes:
-                st.write(", ".join(fixes))
-
-        if action in ("xml", "json") and content.strip():
-            if action == "xml":
-                valid, msg, pretty, highlight, sugg = validate_xml(content)
-            else:
-                valid, msg, pretty, highlight, sugg = validate_json(content)
-
-            if valid:
-                st.markdown(f"<div class='success-box'>{msg}</div>", unsafe_allow_html=True)
-                st.code(pretty, language=action)
-            else:
-                st.markdown(f"<div class='error-box'>{msg}</div>", unsafe_allow_html=True)
-                for s in sugg:
-                    st.markdown(f"<div class='suggestion-box'>💡 {s}</div>", unsafe_allow_html=True)
-                st.code(highlight, language=action)
-
-        del st.session_state.action
+    if action == "clear":
+        st.session_state.clear()
         st.rerun()
 
-    st.markdown("""
-    <div class="separator"></div>
-    <div class="footer">
-        <a class="discord-link" href="https://discord.gg/CQR6KTJ63C">💬 Discord CodeX</a>
-        <p>Créé par EpSy ❤️</p>
-    </div>
-    """, unsafe_allow_html=True)
+    if action in ("xml", "json") and content.strip():
+        valid, msg, formatted, highlighted = (
+            validate_xml(content) if action == "xml" else validate_json(content)
+        )
 
-# =============================
+        if valid:
+            st.markdown(f'<div class="success-box">{msg}</div>', unsafe_allow_html=True)
+            st.code(formatted, language=action)
+        else:
+            st.markdown(f'<div class="error-box">{msg}</div>', unsafe_allow_html=True)
+            st.code(highlighted, language=action)
+
+    if action == "correct" and content.strip():
+        corrected = auto_correct(content)
+        st.session_state["content"] = corrected
+        st.success("✅ Correction appliquée")
+        st.rerun()
+
+    st.session_state["action"] = None
+
+    # FOOTER
+    st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="footer">Par EpSy ❤️ | Discord DayZ FR</div>', unsafe_allow_html=True)
+
+# ==============================
+# RUN
+# ==============================
 if __name__ == "__main__":
     main()
