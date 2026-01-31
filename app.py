@@ -430,7 +430,7 @@ def main():
     with col1:
         try:
             # L'image devient le bouton grâce au CSS
-            if st.button("xml_btn", key="xml", help="Valider XML"):
+            if st.button(" ", key="xml", help="Valider XML"):
                 st.session_state.action = "xml"
             st.image("images/xml.png", use_container_width=True)
         except:
@@ -439,7 +439,7 @@ def main():
     
     with col2:
         try:
-            if st.button("json_btn", key="json", help="Valider JSON"):
+            if st.button(" ", key="xml", help="Valider Json"):
                 st.session_state.action = "json"
             st.image("images/json.png", use_container_width=True)
         except:
@@ -448,8 +448,8 @@ def main():
     
     with col3:
         try:
-            if st.button("correct_btn", key="correct", help="Auto-corriger"):
-                st.session_state.action = "correct"
+            if st.button(" ", key="xml", help="Valider Correction"):
+                st.session_state.action = "correction"
             st.image("images/auto_corriger.png", use_container_width=True)
         except:
             if st.button("🔧 Auto-corriger", key="correct_fallback"):
@@ -457,7 +457,7 @@ def main():
     
     with col4:
         try:
-            if st.button("clear_btn", key="clear", help="Effacer"):
+            if st.button(" ", key="xml", help="Valider ClearL"):
                 st.session_state.action = "clear"
             st.image("images/effacer.png", use_container_width=True)
         except:
@@ -491,9 +491,7 @@ def main():
         action = st.session_state.action
         
         if action == "clear":
-            st.session_state.content = ""
-            if 'uploaded_filename' in st.session_state:
-                del st.session_state.uploaded_filename
+            st.session_state.clear()  # Vider toute la session
             st.rerun()
         
         elif action == "correct":
