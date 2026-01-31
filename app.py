@@ -426,38 +426,26 @@ def main():
     # CORRECTION FINALE: Boutons d'action avec images cliquables UNIQUEMENT (sans bouton "Charger fichier")
     st.markdown("### 🎯 Actions disponibles")
     col1, col2, col3, col4 = st.columns(4)  # 4 colonnes au lieu de 5
-    
+
     with col1:
         st.image("images/xml.png", use_column_width=True)
-            if st.button("</> XML", key="xml", use_container_width=True):
-                st.session_state.action = "xml"
-    
+        if st.button(" ", key="xml", help="Valider XML"):
+            st.session_state.action = "xml"
+
     with col2:
-        try:
-            if st.button(" ", key="xml", help="Valider Json"):
-                st.session_state.action = "json"
-            st.image("images/json.png", use_container_width=True)
-        except:
-            if st.button("{} JSON", key="json_fallback"):
-                st.session_state.action = "json"
-    
+        st.image("images/json.png", use_column_width=True)
+        if st.button(" ", key="json", help="Valider JSON"):
+            st.session_state.action = "json"
+
     with col3:
-        try:
-            if st.button(" ", key="xml", help="Valider Correction"):
-                st.session_state.action = "correction"
-            st.image("images/auto_corriger.png", use_container_width=True)
-        except:
-            if st.button("🔧 Auto-corriger", key="correct_fallback"):
-                st.session_state.action = "correct"
-    
+        st.image("images/auto_corriger.png", use_column_width=True)
+        if st.button(" ", key="correct", help="Auto-corriger"):
+            st.session_state.action = "correct"
+
     with col4:
-        try:
-            if st.button(" ", key="xml", help="Valider ClearL"):
-                st.session_state.action = "clear"
-            st.image("images/effacer.png", use_container_width=True)
-        except:
-            if st.button("🗑️ Effacer", key="clear_fallback"):
-                st.session_state.action = "clear"
+        st.image("images/effacer.png", use_column_width=True)
+        if st.button(" ", key="clear", help="Effacer"):
+            st.session_state.action = "clear"
     
     st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
     
