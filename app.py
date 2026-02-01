@@ -26,19 +26,20 @@ st.markdown("""
 <style>
 * { font-family: Inter, sans-serif; }
 
-.block {
-    padding: 18px;
+.error {
+    background: linear-gradient(135deg, #fa709a, #fee140);
+    padding: 20px;
     border-radius: 14px;
-    margin-bottom: 16px;
 }
 
-.identification { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
-.localisation { background: linear-gradient(135deg, #f6d365, #fda085); }
-.description { background: linear-gradient(135deg, #fa709a, #fee140); }
-.solution { background: linear-gradient(135deg, #84fab0, #8fd3f4); }
+.solution {
+    background: linear-gradient(135deg, #84fab0, #8fd3f4);
+    padding: 20px;
+    border-radius: 14px;
+}
 
 .codebox textarea {
-    font-family: monospace !important;
+    font-family: Consolas, monospace;
 }
 
 .footer {
@@ -52,44 +53,56 @@ st.markdown("""
 # ==============================
 # SESSION STATE
 # ==============================
-defaults = {
+for key, value in {
     "content": "",
     "filename": "",
     "filetype": None,
     "error_info": None,
     "highlighted": "",
     "corrected": ""
-}
-
-for k, v in defaults.items():
-    if k not in st.session_state:
-        st.session_state[k] = v
+}.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 # ==============================
 # UTILS
 # ==============================
-def highlight_error(content, line):
+def highlight_error_with_lines(content, error_line=None):
+    """Ajoute numéros de ligne + surlignage pédagogique"""
     lines = content.splitlines()
-    if 1 <= line <= len(lines):
-        lines[line - 1] = "🔴 ERREUR ICI → " + lines[line - 1]
-    return "\n".join(lines)
+    output = []
+
+    for idx, line in enumerate(lines, start=1):
+        prefix = f"{idx:>4} | "
+        if error_line == idx:
+            output.append(f"{prefix}🔴 ERREUR ICI → {line}")
+        else:
+            output.append(prefix + line)
+
+    return "\n".join(output)
 
 def extract_error_info(err):
     if isinstance(err, json.JSONDecodeError):
         return {
-            "type": "JSON",
+            "type": "json",
             "line": err.lineno,
             "column": err.colno,
             "message": err.msg
         }
     elif isinstance(err, ET.ParseError):
         return {
-            "type": "XML",
+            "type": "xml",
             "line": err.position[0],
             "column": err.position[1],
+            "message": "Structure XML invalide (balise mal fermée ou mal imbriquée)"
+        }
+    else:
+        return {
+            "type": "unknown",
+            "line": "?",
+            "column": "?",
             "message": str(err)
         }
-    return None
 
 def validate_json(content):
     try:
@@ -127,85 +140,68 @@ st.subheader("Comprendre, corriger et fiabiliser tes fichiers DayZ")
 # ==============================
 uploaded = st.file_uploader(
     "📤 Dépose ton fichier XML ou JSON",
-    type=["xml", "json"],
-    disabled=bool(st.session_state.filename)
+    type=["xml", "json"]
 )
 
 if uploaded:
     st.session_state.content = uploaded.read().decode("utf-8")
     st.session_state.filename = uploaded.name
     st.session_state.filetype = uploaded.name.split(".")[-1]
+    st.session_state.error_info = None
 
 # ==============================
-# ACTION BUTTONS
+# VALIDATION
 # ==============================
 if st.session_state.filename:
-    st.info(
-        f"📄 Fichier détecté : **{st.session_state.filename}**  \n"
-        f"👉 Clique sur le bouton correspondant pour lancer la vérification."
-    )
-
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button("🟢 Valider XML", disabled=st.session_state.filetype != "xml"):
+        if st.button("Valider XML") and st.session_state.filetype == "xml":
             err = validate_xml(st.session_state.content)
             if err:
                 st.session_state.error_info = err
-                st.session_state.highlighted = highlight_error(
+                st.session_state.highlighted = highlight_error_with_lines(
                     st.session_state.content, err["line"]
                 )
-            else:
-                st.success("✅ Fichier XML valide")
 
     with col2:
-        if st.button("🔵 Valider JSON", disabled=st.session_state.filetype != "json"):
+        if st.button("Valider JSON") and st.session_state.filetype == "json":
             err = validate_json(st.session_state.content)
             if err:
                 st.session_state.error_info = err
-                st.session_state.highlighted = highlight_error(
+                st.session_state.highlighted = highlight_error_with_lines(
                     st.session_state.content, err["line"]
                 )
-            else:
-                st.success("✅ Fichier JSON valide")
 
 # ==============================
-# PEDAGOGICAL RESULT
+# RÉSULTAT
 # ==============================
 if st.session_state.error_info:
     e = st.session_state.error_info
 
     st.markdown(f"""
-<div class="block identification">
-<h4>🧩 Identification</h4>
-Type de fichier concerné : <b>{e["type"]}</b>
+<div class="error">
+<h4>❌ Erreur détectée</h4>
+<b>📍 Localisation :</b> Ligne {e["line"]}, Colonne {e["column"]}<br>
+<b>🧠 Description :</b> {e["message"]}
 </div>
+""", unsafe_allow_html=True)
 
-<div class="block localisation">
-<h4>📍 Localisation</h4>
-Ligne <b>{e["line"]}</b> — Colonne <b>{e["column"]}</b>
-</div>
-
-<div class="block description">
-<h4>🧠 Description de l’erreur</h4>
-{e["message"]}
-</div>
-
-<div class="block solution">
-<h4>💡 Solution proposée</h4>
+    st.markdown("""
+<div class="solution">
+<h4>💡 Comment corriger</h4>
 <ul>
-<li>Vérifie l’ouverture et la fermeture des balises</li>
-<li>Supprime les virgules finales (JSON)</li>
-<li>Corrige les caractères spéciaux non échappés</li>
-<li>Respecte strictement la structure attendue par DayZ</li>
+<li>Contrôle les balises ouvrantes / fermantes</li>
+<li>Vérifie l’imbrication des blocs</li>
+<li>Assure-toi qu’aucune balise n’est oubliée</li>
 </ul>
 </div>
 """, unsafe_allow_html=True)
 
     st.text_area(
-        "🔍 Code analysé (zone défilante)",
+        "🔍 Code avec repères pédagogiques",
         value=st.session_state.highlighted,
-        height=350
+        height=420
     )
 
 # ==============================
@@ -215,9 +211,9 @@ if st.session_state.error_info:
     if st.button("🔧 Corriger automatiquement"):
         st.session_state.corrected = auto_correct(st.session_state.content)
         st.session_state.content = st.session_state.corrected
-        st.session_state.highlighted = st.session_state.corrected
         st.session_state.error_info = None
-        st.success("✅ Correction appliquée — pense à revérifier le fichier")
+        st.session_state.highlighted = ""
+        st.success("✅ Correction automatique appliquée")
 
 # ==============================
 # DOWNLOAD
@@ -229,12 +225,11 @@ if st.session_state.corrected:
         file_name=st.session_state.filename,
         mime="text/plain"
     )
-    st.info("ℹ️ Le fichier devra être renommé exactement comme l’original pour DayZ")
 
 # ==============================
 # RESET
 # ==============================
-if st.button("🗑️ Réinitialiser l’analyse"):
+if st.button("🗑️ Réinitialiser"):
     st.session_state.clear()
     st.rerun()
 
