@@ -38,14 +38,14 @@ st.markdown("""
     border-radius: 14px;
 }
 
-.codebox textarea {
-    font-family: Consolas, monospace;
-}
-
 .footer {
     text-align: center;
     margin-top: 40px;
     color: #718096;
+}
+
+textarea {
+    font-family: Consolas, monospace !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -53,56 +53,47 @@ st.markdown("""
 # ==============================
 # SESSION STATE
 # ==============================
-for key, value in {
+defaults = {
     "content": "",
     "filename": "",
     "filetype": None,
     "error_info": None,
     "highlighted": "",
     "corrected": ""
-}.items():
-    if key not in st.session_state:
-        st.session_state[key] = value
+}
+for k, v in defaults.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
 
 # ==============================
 # UTILS
 # ==============================
-def highlight_error_with_lines(content, error_line=None):
-    """Ajoute numéros de ligne + surlignage pédagogique"""
+def number_lines(content: str) -> list[str]:
     lines = content.splitlines()
-    output = []
+    width = len(str(len(lines)))
+    return [f"{str(i+1).zfill(width)} | {line}" for i, line in enumerate(lines)]
 
-    for idx, line in enumerate(lines, start=1):
-        prefix = f"{idx:>4} | "
-        if error_line == idx:
-            output.append(f"{prefix}🔴 ERREUR ICI → {line}")
-        else:
-            output.append(prefix + line)
-
-    return "\n".join(output)
+def highlight_error(content: str, error_line: int) -> str:
+    lines = number_lines(content)
+    index = error_line - 1
+    if 0 <= index < len(lines):
+        lines[index] = "🔴 ERREUR ICI → " + lines[index]
+    return "\n".join(lines)
 
 def extract_error_info(err):
     if isinstance(err, json.JSONDecodeError):
         return {
-            "type": "json",
             "line": err.lineno,
             "column": err.colno,
             "message": err.msg
         }
-    elif isinstance(err, ET.ParseError):
+    if isinstance(err, ET.ParseError):
         return {
-            "type": "xml",
             "line": err.position[0],
             "column": err.position[1],
-            "message": "Structure XML invalide (balise mal fermée ou mal imbriquée)"
-        }
-    else:
-        return {
-            "type": "unknown",
-            "line": "?",
-            "column": "?",
             "message": str(err)
         }
+    return {"line": "?", "column": "?", "message": str(err)}
 
 def validate_json(content):
     try:
@@ -146,8 +137,9 @@ uploaded = st.file_uploader(
 if uploaded:
     st.session_state.content = uploaded.read().decode("utf-8")
     st.session_state.filename = uploaded.name
-    st.session_state.filetype = uploaded.name.split(".")[-1]
+    st.session_state.filetype = uploaded.name.split(".")[-1].lower()
     st.session_state.error_info = None
+    st.session_state.highlighted = ""
 
 # ==============================
 # VALIDATION
@@ -156,25 +148,31 @@ if st.session_state.filename:
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button("Valider XML") and st.session_state.filetype == "xml":
+        if st.button(
+            "🟩 Valider XML",
+            disabled=st.session_state.filetype != "xml"
+        ):
             err = validate_xml(st.session_state.content)
             if err:
                 st.session_state.error_info = err
-                st.session_state.highlighted = highlight_error_with_lines(
+                st.session_state.highlighted = highlight_error(
                     st.session_state.content, err["line"]
                 )
 
     with col2:
-        if st.button("Valider JSON") and st.session_state.filetype == "json":
+        if st.button(
+            "🟦 Valider JSON",
+            disabled=st.session_state.filetype != "json"
+        ):
             err = validate_json(st.session_state.content)
             if err:
                 st.session_state.error_info = err
-                st.session_state.highlighted = highlight_error_with_lines(
+                st.session_state.highlighted = highlight_error(
                     st.session_state.content, err["line"]
                 )
 
 # ==============================
-# RÉSULTAT
+# RESULTAT
 # ==============================
 if st.session_state.error_info:
     e = st.session_state.error_info
@@ -191,17 +189,17 @@ if st.session_state.error_info:
 <div class="solution">
 <h4>💡 Comment corriger</h4>
 <ul>
-<li>Contrôle les balises ouvrantes / fermantes</li>
-<li>Vérifie l’imbrication des blocs</li>
-<li>Assure-toi qu’aucune balise n’est oubliée</li>
+<li>Vérifie l’ouverture et la fermeture des balises</li>
+<li>Supprime les virgules finales (JSON)</li>
+<li>Contrôle les caractères spéciaux (&, &lt;, &gt;)</li>
 </ul>
 </div>
 """, unsafe_allow_html=True)
 
     st.text_area(
-        "🔍 Code avec repères pédagogiques",
+        "🔍 Code analysé (ligne numérotée)",
         value=st.session_state.highlighted,
-        height=420
+        height=380
     )
 
 # ==============================
@@ -213,7 +211,7 @@ if st.session_state.error_info:
         st.session_state.content = st.session_state.corrected
         st.session_state.error_info = None
         st.session_state.highlighted = ""
-        st.success("✅ Correction automatique appliquée")
+        st.success("✅ Correction appliquée (revalidation conseillée)")
 
 # ==============================
 # DOWNLOAD
@@ -225,6 +223,7 @@ if st.session_state.corrected:
         file_name=st.session_state.filename,
         mime="text/plain"
     )
+    st.info("ℹ️ Renomme le fichier comme l’original si nécessaire")
 
 # ==============================
 # RESET
