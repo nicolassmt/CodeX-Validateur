@@ -218,6 +218,17 @@ if st.session_state.content:
         
         if st.button("🔧 Auto-corriger", use_container_width=True, disabled=not can_correct, key="btn_correct_top"):
             with st.spinner("Correction en cours..."):
+                # Sauvegarder la ligne d'erreur si validation disponible
+                if st.session_state.validation_result and not st.session_state.validation_result["valid"]:
+                    error = st.session_state.validation_result["error"]
+                    reported_line = error["line"]
+                    
+                    if st.session_state.filetype == "xml":
+                        location = locate_real_error(st.session_state.content, reported_line)
+                        st.session_state.error_line = location["real_line"]
+                    else:
+                        st.session_state.error_line = reported_line
+                
                 correction = auto_correct(
                     st.session_state.content, 
                     st.session_state.filetype
@@ -459,20 +470,20 @@ if st.session_state.validation_result:
             can_auto = can_auto_correct(matched)
             
             if can_auto:
-                st.markdown(f"""
+                st.markdown("""
                 <div class="block solution">
                     <h4>💡 Solution</h4>
-                    <p>✅ <b>Cette erreur peut être corrigée automatiquement !</b></p>
-                    
-                    <p><b>👉 Action immédiate :</b></p>
-                    <p>
-                    1. Clique sur le bouton <b>"🔧 Auto-corriger"</b> (en haut de la page ou ci-dessous)<br>
-                    2. Compare l'extrait avant/après qui s'affichera<br>
-                    3. Télécharge le fichier complet corrigé avec <b>"💾 Télécharger"</b><br>
-                    4. Re-valide le fichier pour confirmer qu'il n'y a plus d'erreur
-                    </p>
+                    <p>✅ <strong>Cette erreur peut être corrigée automatiquement !</strong></p>
                 </div>
                 """, unsafe_allow_html=True)
+                
+                st.markdown("**👉 Action immédiate :**")
+                st.markdown("""
+                1. Clique sur le bouton **"🔧 Auto-corriger"** (en haut de la page ou ci-dessous)
+                2. Compare l'extrait avant/après qui s'affichera
+                3. Télécharge le fichier complet corrigé avec **"💾 Télécharger"**
+                4. Re-valide le fichier pour confirmer qu'il n'y a plus d'erreur
+                """)
             else:
                 # Suggestions manuelles
                 suggestions = suggest_manual_fixes(
@@ -481,22 +492,21 @@ if st.session_state.validation_result:
                     matched
                 )
                 
-                steps_html = "<br>".join([f"{i+1}. {step}" for i, step in enumerate(suggestions["manual_steps"])])
-                
-                st.markdown(f"""
+                st.markdown("""
                 <div class="block solution">
                     <h4>💡 Solution</h4>
-                    <p>⚠️ <b>Cette erreur nécessite une correction manuelle.</b></p>
-                    
-                    <p><b>👉 Étapes à suivre :</b></p>
-                    <p>
-                    {steps_html}<br>
-                    {len(suggestions["manual_steps"]) + 1}. Modifie ton fichier selon ces indications<br>
-                    {len(suggestions["manual_steps"]) + 2}. Re-charge le fichier corrigé dans l'outil<br>
-                    {len(suggestions["manual_steps"]) + 3}. Clique sur <b>"🔍 Valider"</b> pour vérifier
-                    </p>
+                    <p>⚠️ <strong>Cette erreur nécessite une correction manuelle.</strong></p>
                 </div>
                 """, unsafe_allow_html=True)
+                
+                st.markdown("**👉 Étapes à suivre :**")
+                manual_steps = "\n".join([f"{i+1}. {step}" for i, step in enumerate(suggestions["manual_steps"])])
+                st.markdown(f"""
+                {manual_steps}
+                {len(suggestions["manual_steps"]) + 1}. Modifie ton fichier selon ces indications
+                {len(suggestions["manual_steps"]) + 2}. Re-charge le fichier corrigé dans l'outil
+                {len(suggestions["manual_steps"]) + 3}. Clique sur **"🔍 Valider"** pour vérifier
+                """)
         
         # ==============================
         # BLOC 6 : CODE COMPLET (avec scroll)
@@ -539,6 +549,7 @@ if st.session_state.validation_result:
             with col_bottom_btn:
                 if st.button("🔧 Auto-corriger maintenant", use_container_width=True, type="primary", key="btn_correct_bottom"):
                     with st.spinner("Correction en cours..."):
+                        # error_line est déjà sauvegardé plus haut (ligne 382)
                         correction = auto_correct(
                             st.session_state.content, 
                             st.session_state.filetype
