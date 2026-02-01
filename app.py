@@ -13,8 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent / "modules"))
 
 from modules.validator import validate
 from modules.locator import locate_real_error
-from modules.comparator import compare_before_after, compare_side_by_side
-from modules.corrector import auto_correct, can_auto_correct, suggest_manual_fixes
+from modules.corrector import suggest_manual_fixes
 
 
 # ==============================
@@ -105,10 +104,7 @@ defaults = {
     "content": "",
     "filename": "",
     "filetype": None,
-    "validation_result": None,
-    "corrected_content": None,
-    "error_line": None,  # Ligne de l'erreur pour l'extrait
-    "correction_applied": False
+    "validation_result": None
 }
 
 for k, v in defaults.items():
@@ -155,9 +151,6 @@ if uploaded:
     st.session_state.filename = uploaded.name
     st.session_state.filetype = uploaded.name.split(".")[-1].lower()
     st.session_state.validation_result = None
-    st.session_state.corrected_content = None
-    st.session_state.error_line = None
-    st.session_state.correction_applied = False
 
 
 # ==============================
@@ -186,9 +179,6 @@ if not uploaded:
         st.session_state.filetype = manual_type
         st.session_state.filename = f"code_colle.{manual_type}"
         st.session_state.validation_result = None
-        st.session_state.corrected_content = None
-        st.session_state.error_line = None
-        st.session_state.correction_applied = False
 
 st.markdown("---")
 
@@ -199,74 +189,43 @@ st.markdown("---")
 if st.session_state.content:
     st.markdown("### 🎯 Actions disponibles")
     
-    col_btn_1, col_btn_2, col_btn_3, col_btn_4 = st.columns(4)
+    col_btn_1, col_btn_2, col_btn_3 = st.columns(3)
     
     with col_btn_1:
         if st.button("🔍 Valider", use_container_width=True, type="primary"):
             with st.spinner("Validation en cours..."):
                 result = validate(st.session_state.content, st.session_state.filetype)
                 st.session_state.validation_result = result
-                st.session_state.corrected_content = None
-                st.session_state.correction_applied = False
     
     with col_btn_2:
-        # Bouton correction : actif uniquement si validation échouée
-        can_correct = (
-            st.session_state.validation_result and 
-            not st.session_state.validation_result["valid"]
-        )
-        
-        if st.button("🔧 Auto-corriger", use_container_width=True, disabled=not can_correct, key="btn_correct_top"):
-            with st.spinner("Correction en cours..."):
-                # Sauvegarder la ligne d'erreur si validation disponible
-                if st.session_state.validation_result and not st.session_state.validation_result["valid"]:
-                    error = st.session_state.validation_result["error"]
-                    reported_line = error["line"]
-                    
-                    if st.session_state.filetype == "xml":
-                        location = locate_real_error(st.session_state.content, reported_line)
-                        st.session_state.error_line = location["real_line"]
-                    else:
-                        st.session_state.error_line = reported_line
-                
-                correction = auto_correct(
-                    st.session_state.content, 
-                    st.session_state.filetype
-                )
-                
-                if correction["has_changes"]:
-                    st.session_state.corrected_content = correction["corrected"]
-                    st.session_state.correction_applied = True
-                    st.success(f"✅ {len(correction['applied_corrections'])} correction(s) appliquée(s)")
-                    st.rerun()
-                else:
-                    st.info("ℹ️ Aucune correction automatique possible pour cette erreur")
-    
-    with col_btn_3:
         if st.button("🗑️ Réinitialiser", use_container_width=True):
             for key in defaults.keys():
                 st.session_state[key] = defaults[key]
             st.rerun()
     
-    with col_btn_4:
+    with col_btn_3:
         # Bouton télécharger actif si validation OK OU correction disponible
-        download_enabled = (
-            (st.session_state.validation_result and st.session_state.validation_result["valid"]) or
-            st.session_state.corrected_content is not None
-        )
+        download_enabled = False
+        download_content = st.session_state.content
+        download_filename = st.session_state.filename
         
-        if download_enabled:
-            # Télécharger le contenu corrigé si dispo, sinon le contenu validé
-            download_content = st.session_state.corrected_content or st.session_state.content
-            download_filename = st.session_state.filename
+        if st.session_state.validation_result:
+            result = st.session_state.validation_result
             
-            if st.session_state.corrected_content:
+            if result["valid"]:
+                download_enabled = True
+                download_content = result["formatted"]
+            elif result.get("corrected"):
+                download_enabled = True
+                download_content = result["corrected"]
+                # Renommer le fichier
                 name_parts = st.session_state.filename.rsplit(".", 1)
                 if len(name_parts) == 2:
                     download_filename = f"{name_parts[0]}_corrige.{name_parts[1]}"
                 else:
                     download_filename = f"{st.session_state.filename}_corrige"
-            
+        
+        if download_enabled:
             st.download_button(
                 "💾 Télécharger",
                 data=download_content,
@@ -278,73 +237,6 @@ if st.session_state.content:
             st.button("💾 Télécharger", use_container_width=True, disabled=True, help="Valide d'abord ton fichier")
 
 st.markdown("---")
-
-
-# ==============================
-# AFFICHAGE CORRECTION (extrait ±5 lignes)
-# ==============================
-if st.session_state.corrected_content and st.session_state.error_line:
-    st.markdown("""
-    <div class="correction-result">
-        <h3>✅ Correction appliquée avec succès !</h3>
-        <p>Voici l'extrait corrigé. Le fichier complet est prêt au téléchargement.</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("### 🔄 Comparaison avant / après (extrait autour de l'erreur)")
-    
-    # Extraire ±5 lignes autour de l'erreur
-    lines_before = st.session_state.content.splitlines()
-    lines_after = st.session_state.corrected_content.splitlines()
-    
-    error_line = st.session_state.error_line
-    start_line = max(1, error_line - 5)
-    end_line = min(len(lines_before), error_line + 5)
-    
-    col_comp_1, col_comp_2 = st.columns(2)
-    
-    with col_comp_1:
-        st.markdown("**❌ Avant**")
-        before_extract = []
-        for i in range(start_line, end_line + 1):
-            if i <= len(lines_before):
-                line_content = lines_before[i - 1]
-                if i == error_line:
-                    before_extract.append(f"🔴 {line_content}")
-                else:
-                    before_extract.append(f"   {line_content}")
-        
-        st.code("\n".join(before_extract), language=st.session_state.filetype, line_numbers=True)
-    
-    with col_comp_2:
-        st.markdown("**✅ Après**")
-        after_extract = []
-        for i in range(start_line, end_line + 1):
-            if i <= len(lines_after):
-                line_content = lines_after[i - 1]
-                if i == error_line:
-                    after_extract.append(f"✅ {line_content}")
-                else:
-                    after_extract.append(f"   {line_content}")
-        
-        st.code("\n".join(after_extract), language=st.session_state.filetype, line_numbers=True)
-    
-    # Bouton Re-valider
-    st.markdown("---")
-    col_revalidate = st.columns([1, 2, 1])[1]
-    
-    with col_revalidate:
-        if st.button("🔍 Re-valider le fichier corrigé", use_container_width=True, type="primary"):
-            with st.spinner("Re-validation en cours..."):
-                # Remplacer le contenu par le corrigé et re-valider
-                st.session_state.content = st.session_state.corrected_content
-                result = validate(st.session_state.content, st.session_state.filetype)
-                st.session_state.validation_result = result
-                st.session_state.corrected_content = None
-                st.session_state.error_line = None
-                st.rerun()
-    
-    st.markdown("---")
 
 
 # ==============================
@@ -395,8 +287,55 @@ if st.session_state.validation_result:
             confidence = location["confidence"]
             reason = location["reason"]
         
-        # Sauvegarder la ligne d'erreur pour l'extrait de correction
-        st.session_state.error_line = real_line
+        # ==============================
+        # AFFICHAGE CORRECTION AUTO (si disponible) EN PREMIER
+        # ==============================
+        if result.get("corrected"):
+            st.markdown("""
+            <div class="correction-result">
+                <h3>✅ Correction automatique disponible !</h3>
+                <p>L'erreur a été corrigée automatiquement. Compare l'extrait ci-dessous et télécharge le fichier complet.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("### 🔄 Comparaison avant / après (extrait autour de l'erreur)")
+            
+            # Extraire ±5 lignes autour de l'erreur
+            lines_before = st.session_state.content.splitlines()
+            lines_after = result["corrected"].splitlines()
+            
+            start_line = max(1, real_line - 5)
+            end_line = min(len(lines_before), real_line + 5)
+            
+            col_comp_1, col_comp_2 = st.columns(2)
+            
+            with col_comp_1:
+                st.markdown("**❌ Avant**")
+                before_extract = []
+                for i in range(start_line, end_line + 1):
+                    if i <= len(lines_before):
+                        line_content = lines_before[i - 1]
+                        if i == real_line:
+                            before_extract.append(f"🔴 {line_content}")
+                        else:
+                            before_extract.append(f"   {line_content}")
+                
+                st.code("\n".join(before_extract), language=result["file_type"], line_numbers=True)
+            
+            with col_comp_2:
+                st.markdown("**✅ Après**")
+                after_extract = []
+                for i in range(start_line, end_line + 1):
+                    if i <= len(lines_after):
+                        line_content = lines_after[i - 1]
+                        if i == real_line:
+                            after_extract.append(f"✅ {line_content}")
+                        else:
+                            after_extract.append(f"   {line_content}")
+                
+                st.code("\n".join(after_extract), language=result["file_type"], line_numbers=True)
+            
+            st.markdown("---")
         
         # ==============================
         # BLOC 1 : LOCALISATION
@@ -464,28 +403,26 @@ if st.session_state.validation_result:
         """, unsafe_allow_html=True)
         
         # ==============================
-        # BLOC 5 : SOLUTION (FIX du bug HTML)
+        # BLOC 5 : SOLUTION
         # ==============================
         if matched:
-            can_auto = can_auto_correct(matched)
-            
-            if can_auto:
+            if result.get("corrected"):
+                # Correction auto déjà disponible
                 st.markdown("""
                 <div class="block solution">
                     <h4>💡 Solution</h4>
-                    <p>✅ <strong>Cette erreur peut être corrigée automatiquement !</strong></p>
+                    <p>✅ <strong>Cette erreur a été corrigée automatiquement !</strong></p>
                 </div>
                 """, unsafe_allow_html=True)
                 
                 st.markdown("**👉 Action immédiate :**")
                 st.markdown("""
-                1. Clique sur le bouton **"🔧 Auto-corriger"** (en haut de la page ou ci-dessous)
-                2. Compare l'extrait avant/après qui s'affichera
-                3. Télécharge le fichier complet corrigé avec **"💾 Télécharger"**
-                4. Re-valide le fichier pour confirmer qu'il n'y a plus d'erreur
+                1. Vérifie la comparaison avant/après ci-dessus
+                2. Télécharge le fichier complet corrigé avec **"💾 Télécharger"**
+                3. Utilise le fichier téléchargé dans DayZ
                 """)
             else:
-                # Suggestions manuelles
+                # Correction manuelle nécessaire
                 suggestions = suggest_manual_fixes(
                     st.session_state.content,
                     result["file_type"],
@@ -538,29 +475,6 @@ if st.session_state.validation_result:
                 with col_ex_2:
                     st.markdown("**✅ Après (correct)**")
                     st.code(matched["exemple_après"], language=result["file_type"])
-        
-        # ==============================
-        # BOUTON AUTO-CORRIGER EN BAS
-        # ==============================
-        if matched and can_auto_correct(matched):
-            st.markdown("---")
-            col_bottom_btn = st.columns([1, 2, 1])[1]
-            
-            with col_bottom_btn:
-                if st.button("🔧 Auto-corriger maintenant", use_container_width=True, type="primary", key="btn_correct_bottom"):
-                    with st.spinner("Correction en cours..."):
-                        # error_line est déjà sauvegardé plus haut (ligne 382)
-                        correction = auto_correct(
-                            st.session_state.content, 
-                            st.session_state.filetype
-                        )
-                        
-                        if correction["has_changes"]:
-                            st.session_state.corrected_content = correction["corrected"]
-                            st.session_state.correction_applied = True
-                            st.rerun()
-                        else:
-                            st.info("ℹ️ Aucune correction automatique possible")
 
 
 # ==============================
