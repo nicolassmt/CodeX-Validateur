@@ -67,6 +67,43 @@ st.markdown("""
     margin: 20px 0;
 }
 
+/* ✨ NOUVEAU : Bloc warnings sémantiques */
+.semantic-warnings {
+    background: linear-gradient(135deg, #fef3c7, #fbbf24);
+    padding: 20px;
+    border-radius: 14px;
+    margin: 20px 0;
+    border: 2px solid #f59e0b;
+}
+
+.warning-item {
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    margin: 10px 0;
+    border-left: 4px solid #f59e0b;
+}
+
+.error-item {
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    margin: 10px 0;
+    border-left: 4px solid #dc2626;
+}
+
+/* ✨ NOUVEAU : Badge type fichier */
+.dayz-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9em;
+    margin-left: 10px;
+}
+
 .footer {
     text-align: center;
     margin-top: 50px;
@@ -95,6 +132,39 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
+
+
+# ==============================
+# ✨ NOUVEAU : SIDEBAR
+# ==============================
+with st.sidebar:
+    st.markdown("### 📚 Documentation")
+    st.markdown("""
+    **Fichiers DayZ documentés :**
+    - 📄 [types.xml](docs/TYPES_XML_DOCUMENTATION.md)
+    - 🚁 [events.xml](docs/EVENTS_XML_DOCUMENTATION.md)
+    - 💰 [economy.xml](docs/ECONOMY_XML_DOCUMENTATION.md)
+    - 🌐 [globals.xml](docs/GLOBALS_XML_DOCUMENTATION.md)
+    - 💬 [messages.xml](docs/MESSAGES_XML_DOCUMENTATION.md)
+    """)
+    
+    st.markdown("---")
+    
+    st.markdown("### ℹ️ À propos")
+    st.markdown("""
+    **Codex Validateur** v2.0
+    
+    Validation syntaxique ET sémantique des fichiers DayZ.
+    
+    🔍 Détecte les erreurs  
+    ✅ Corrige automatiquement  
+    📚 Valide les règles métier
+    """)
+    
+    st.markdown("---")
+    
+    st.markdown("### 💬 Communauté")
+    st.markdown("[Discord](https://discord.gg/CQR6KTJ63C)")
 
 
 # ==============================
@@ -143,7 +213,7 @@ st.markdown("---")
 uploaded = st.file_uploader(
     "📤 Dépose ton fichier XML ou JSON",
     type=["xml", "json"],
-    help="Fichiers DayZ acceptés : cfgweather.xml, cfgeventsapawns.xml, types.xml, cfggameplay.json, etc."
+    help="Fichiers DayZ acceptés : types.xml, events.xml, economy.xml, globals.xml, messages.xml, etc."
 )
 
 if uploaded:
@@ -245,16 +315,66 @@ st.markdown("---")
 if st.session_state.validation_result:
     result = st.session_state.validation_result
     
+    # ✨ NOUVEAU : Afficher le type DayZ détecté
+    if result.get("dayz_type"):
+        dayz_type_names = {
+            "types": "types.xml (Items & Loot)",
+            "events": "events.xml (Événements dynamiques)",
+            "economy": "economy.xml (Économie globale)",
+            "globals": "globals.xml (Variables serveur)",
+            "messages": "messages.xml (Messages automatiques)"
+        }
+        dayz_display = dayz_type_names.get(result["dayz_type"], result["dayz_type"])
+        
+        st.markdown(f"""
+        <div style="text-align: center; margin: 20px 0;">
+            <span class="dayz-badge">📄 Fichier détecté : {dayz_display}</span>
+        </div>
+        """, unsafe_allow_html=True)
+    
     # ==============================
     # CAS 1 : FICHIER VALIDE
     # ==============================
     if result["valid"]:
         st.markdown("""
         <div class="success-block">
-            <h3>✅ Nickel ! Ton fichier est parfait !</h3>
-            <p>Aucune erreur détectée. Le fichier est prêt pour DayZ.</p>
+            <h3>✅ Nickel ! Ton fichier est parfait syntaxiquement !</h3>
+            <p>Aucune erreur de syntaxe détectée. Le fichier est prêt pour DayZ.</p>
         </div>
         """, unsafe_allow_html=True)
+        
+        # ✨ NOUVEAU : Afficher les warnings sémantiques si présents
+        if result.get("semantic_warnings") and len(result["semantic_warnings"]) > 0:
+            warnings = result["semantic_warnings"]
+            errors_count = sum(1 for w in warnings if w["severity"] == "error")
+            warnings_count = sum(1 for w in warnings if w["severity"] == "warning")
+            
+            st.markdown(f"""
+            <div class="semantic-warnings">
+                <h3>⚠️ Validation sémantique : {errors_count} erreur(s), {warnings_count} avertissement(s)</h3>
+                <p>La syntaxe est correcte, mais certaines <strong>règles métier DayZ</strong> ne sont pas respectées :</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            for warning in warnings:
+                severity_icon = "🔴" if warning["severity"] == "error" else "⚠️"
+                severity_class = "error-item" if warning["severity"] == "error" else "warning-item"
+                severity_label = "ERREUR MÉTIER" if warning["severity"] == "error" else "AVERTISSEMENT"
+                
+                st.markdown(f"""
+                <div class="{severity_class}">
+                    <p><strong>{severity_icon} {severity_label}</strong></p>
+                    <p>{warning["message"]}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            
+            # Recommandations
+            if errors_count > 0:
+                st.warning("⚠️ **Action recommandée :** Corrige les erreurs métier ci-dessus avant d'utiliser ce fichier sur ton serveur. Ces erreurs peuvent causer des dysfonctionnements in-game.")
+            else:
+                st.info("💡 **Info :** Les avertissements ci-dessus sont des suggestions d'amélioration. Le fichier fonctionnera, mais ces ajustements sont recommandés.")
         
         st.markdown("#### 🎨 Code formaté")
         st.code(result["formatted"], language=result["file_type"], line_numbers=True)
@@ -483,7 +603,7 @@ if st.session_state.validation_result:
 st.markdown(
     """
     <div class="footer">
-        <p><strong>Codex Validateur XML/JSON</strong></p>
+        <p><strong>Codex Validateur XML/JSON</strong> v2.0</p>
         <p>Créé avec ❤️ par <strong>EpSy</strong> pour la communauté DayZ francophone</p>
         <p><a href="https://discord.gg/CQR6KTJ63C" target="_blank">💬 Rejoindre le Discord</a></p>
     </div>
