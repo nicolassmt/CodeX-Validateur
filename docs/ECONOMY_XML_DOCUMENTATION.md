@@ -808,18 +808,6 @@ Exemples :
 
 ---
 
-**📝 Document créé par Codex - L'outil pour la communauté DayZ FR**
+**📝 Document créé par CodeX - L'outil pour la communauté DayZ FR**
 **Version : 1.0 - Basé sur DayZ 1.28**
 **Dernière mise à jour : 2025**
-
----
-
-## 🎯 Prochaines étapes
-
-1. ✅ Documentation economy.xml complétée
-2. 📄 Fichiers génériques restants :
-   - globals.xml
-   - messages.xml
-3. 🗺️ Puis fichiers par map (zombie_territories, cfgeventspawns)
-
-**Ce fichier est COURT mais CRUCIAL - Un seul flag mal configuré peut CASSER tout le serveur ! ⚠️**
