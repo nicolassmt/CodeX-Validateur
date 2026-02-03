@@ -28,7 +28,7 @@ st.set_page_config(
 
 
 # ==============================
-# CSS
+# CSS - SECTION AMÉLIORÉE
 # ==============================
 st.markdown("""
 <style>
@@ -67,7 +67,6 @@ st.markdown("""
     margin: 20px 0;
 }
 
-/* ✨ NOUVEAU : Bloc warnings sémantiques */
 .semantic-warnings {
     background: linear-gradient(135deg, #fef3c7, #fbbf24);
     padding: 20px;
@@ -92,7 +91,6 @@ st.markdown("""
     border-left: 4px solid #dc2626;
 }
 
-/* ✨ NOUVEAU : Badge type fichier */
 .dayz-badge {
     display: inline-block;
     background: linear-gradient(135deg, #667eea, #764ba2);
@@ -112,14 +110,36 @@ st.markdown("""
     color: #6b7280;
 }
 
-/* Scroll pour le code analysé */
+/* ✨ AMÉLIORÉ : Scroll pour le code analysé */
 .code-scroll {
-    max-height: 400px;
-    overflow-y: auto;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 10px;
+    max-height: 600px;           /* Hauteur max augmentée */
+    overflow-y: scroll;          /* Force TOUJOURS la scrollbar */
+    overflow-x: auto;            /* Scroll horizontal si besoin */
+    border: 2px solid #d1d5db;   /* Border plus visible */
+    border-radius: 10px;
+    padding: 20px;
     background: #f9fafb;
+    margin: 20px 0;
+    font-family: 'Courier New', monospace;
+}
+
+/* Style de la scrollbar (Webkit - Chrome/Safari) */
+.code-scroll::-webkit-scrollbar {
+    width: 12px;
+}
+
+.code-scroll::-webkit-scrollbar-track {
+    background: #e5e7eb;
+    border-radius: 10px;
+}
+
+.code-scroll::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+    border-radius: 10px;
+}
+
+.code-scroll::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
 }
 
 /* Comparaison après correction */
