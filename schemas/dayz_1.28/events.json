@@ -1,0 +1,438 @@
+{
+  "version": "1.28",
+  "file_type": "events.xml",
+  "description": "Schéma de validation pour events.xml DayZ 1.28 - Gestion des événements dynamiques",
+  "last_updated": "2025-01-30",
+  
+  "structure": {
+    "root_element": "events",
+    "child_element": "event",
+    "multiple_children": true
+  },
+  
+  "event_element": {
+    "attributes": {
+      "name": {
+        "required": true,
+        "type": "string",
+        "description": "Nom unique de l'event",
+        "validation": "non_empty",
+        "conventions": {
+          "Animal*": "Animaux sauvages",
+          "Infected*": "Zombies infectés dynamiques",
+          "Static*": "Events statiques (crash, convoi)",
+          "Vehicle*": "Véhicules",
+          "Trajectory*": "Ressources naturelles"
+        }
+      }
+    },
+    
+    "children": {
+      "nominal": {
+        "required": true,
+        "type": "integer",
+        "min": 0,
+        "max": 250,
+        "description": "Nombre cible d'instances simultanées",
+        "validation_rules": [
+          "must_be_between_min_and_max"
+        ]
+      },
+      
+      "min": {
+        "required": true,
+        "type": "integer",
+        "min": 0,
+        "max": 250,
+        "description": "Nombre minimum garanti",
+        "validation_rules": [
+          "must_be_less_or_equal_to_nominal",
+          "must_be_less_or_equal_to_max"
+        ]
+      },
+      
+      "max": {
+        "required": true,
+        "type": "integer",
+        "min": 0,
+        "max": 250,
+        "description": "Nombre maximum autorisé",
+        "validation_rules": [
+          "must_be_greater_or_equal_to_nominal",
+          "must_be_greater_or_equal_to_min"
+        ]
+      },
+      
+      "lifetime": {
+        "required": true,
+        "type": "integer",
+        "min": 1,
+        "max": 7200,
+        "description": "Durée de vie (unité variable selon type)",
+        "note": "Animaux/Events: minutes, Autres: peut varier",
+        "validation_rules": [
+          "must_be_greater_than_zero"
+        ],
+        "valeurs_courantes": {
+          "zombies": 3,
+          "animaux": 180,
+          "vehicules": 300,
+          "events_statiques": 7200
+        }
+      },
+      
+      "restock": {
+        "required": true,
+        "type": "integer",
+        "min": 0,
+        "max": 7200,
+        "description": "Temps avant respawn possible",
+        "valeur_speciale": {
+          "0": "Respawn immédiat si sous nominal"
+        }
+      },
+      
+      "saferadius": {
+        "required": true,
+        "type": "integer",
+        "min": 0,
+        "max": 1000,
+        "description": "Rayon de sécurité autour des joueurs (mètres)",
+        "note": "0 = peut spawn près des joueurs"
+      },
+      
+      "distanceradius": {
+        "required": true,
+        "type": "integer",
+        "min": 0,
+        "max": 1000,
+        "description": "Distance minimale entre events du même type (mètres)"
+      },
+      
+      "cleanupradius": {
+        "required": true,
+        "type": "integer",
+        "min": 0,
+        "max": 200,
+        "description": "Rayon de cleanup (mètres)"
+      },
+      
+      "flags": {
+        "required": true,
+        "type": "element_with_attributes",
+        "self_closing": true,
+        "description": "Drapeaux de comportement",
+        "attributes": {
+          "deletable": {
+            "type": "boolean_int",
+            "values": [0, 1],
+            "default": 0,
+            "description": "Event peut être supprimé"
+          },
+          "init_random": {
+            "type": "boolean_int",
+            "values": [0, 1],
+            "default": 0,
+            "description": "Init aléatoire au démarrage"
+          },
+          "remove_damaged": {
+            "type": "boolean_int",
+            "values": [0, 1],
+            "default": 0,
+            "description": "Retirer si endommagé"
+          }
+        }
+      },
+      
+      "position": {
+        "required": true,
+        "type": "enum",
+        "quantity": "single",
+        "description": "Mode de positionnement",
+        "values": [
+          "fixed",
+          "player",
+          "uniform"
+        ],
+        "descriptions": {
+          "fixed": "Position fixe (cfgeventspawns.xml)",
+          "player": "Dynamique autour du joueur",
+          "uniform": "Uniforme sur toute la map"
+        }
+      },
+      
+      "limit": {
+        "required": true,
+        "type": "enum",
+        "quantity": "single",
+        "description": "Mode de limitation du spawn",
+        "values": [
+          "mixed",
+          "parent",
+          "child",
+          "custom"
+        ],
+        "descriptions": {
+          "mixed": "Mélange aléatoire de children",
+          "parent": "Limite au niveau parent",
+          "child": "Limite au niveau child",
+          "custom": "Comportement spécial"
+        }
+      },
+      
+      "active": {
+        "required": true,
+        "type": "boolean_int",
+        "values": [0, 1],
+        "description": "Event activé (1) ou désactivé (0)"
+      },
+      
+      "children": {
+        "required": true,
+        "type": "container",
+        "description": "Objets/entités spawnés par cet event",
+        "child_element": {
+          "name": "child",
+          "self_closing": true,
+          "attributes": {
+            "type": {
+              "required": true,
+              "type": "string",
+              "description": "Classname de l'objet/entité",
+              "examples": [
+                "Animal_UrsusArctos",
+                "ZmbM_SoldierNormal",
+                "UH1H_Wreck",
+                "CivilianSedan"
+              ]
+            },
+            "min": {
+              "required": true,
+              "type": "integer",
+              "min": 0,
+              "max": 100,
+              "description": "Nombre minimum à spawner"
+            },
+            "max": {
+              "required": true,
+              "type": "integer",
+              "min": 0,
+              "max": 100,
+              "description": "Nombre maximum à spawner",
+              "validation_rules": [
+                "must_be_greater_or_equal_to_min"
+              ]
+            },
+            "lootmin": {
+              "required": true,
+              "type": "integer",
+              "min": 0,
+              "max": 10,
+              "description": "Quantité minimale de loot"
+            },
+            "lootmax": {
+              "required": true,
+              "type": "integer",
+              "min": 0,
+              "max": 10,
+              "description": "Quantité maximale de loot",
+              "validation_rules": [
+                "must_be_greater_or_equal_to_lootmin"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  
+  "validation_rules": {
+    "min_lte_nominal_lte_max": {
+      "description": "min ≤ nominal ≤ max",
+      "error_message_fr": "La relation min ({min}) ≤ nominal ({nominal}) ≤ max ({max}) n'est pas respectée",
+      "error_message_en": "Relationship min ({min}) ≤ nominal ({nominal}) ≤ max ({max}) not respected",
+      "severity": "error"
+    },
+    
+    "lifetime_positive": {
+      "description": "lifetime doit être > 0",
+      "error_message_fr": "La durée de vie doit être supérieure à 0 (actuellement : {lifetime})",
+      "error_message_en": "lifetime must be greater than 0 (currently: {lifetime})",
+      "severity": "error"
+    },
+    
+    "active_binary": {
+      "description": "active doit être 0 ou 1",
+      "error_message_fr": "active doit être 0 ou 1 (actuellement : {active})",
+      "error_message_en": "active must be 0 or 1 (currently: {active})",
+      "severity": "error"
+    },
+    
+    "flags_binary": {
+      "description": "Les flags doivent être 0 ou 1",
+      "error_message_fr": "Le flag '{flag_name}' doit être 0 ou 1 (actuellement : {value})",
+      "error_message_en": "Flag '{flag_name}' must be 0 or 1 (currently: {value})",
+      "severity": "error"
+    },
+    
+    "child_min_lte_max": {
+      "description": "Child: min ≤ max",
+      "error_message_fr": "Child '{child_type}': min ({min}) ne peut pas être supérieur à max ({max})",
+      "error_message_en": "Child '{child_type}': min ({min}) cannot be greater than max ({max})",
+      "severity": "error"
+    },
+    
+    "child_lootmin_lte_lootmax": {
+      "description": "Child: lootmin ≤ lootmax",
+      "error_message_fr": "Child '{child_type}': lootmin ({lootmin}) ne peut pas être supérieur à lootmax ({lootmax})",
+      "error_message_en": "Child '{child_type}': lootmin ({lootmin}) cannot be greater than lootmax ({lootmax})",
+      "severity": "error"
+    },
+    
+    "disabled_event_warning": {
+      "description": "Event désactivé (active=0)",
+      "error_message_fr": "Event '{event_name}' est désactivé (active=0). Est-ce voulu ?",
+      "error_message_en": "Event '{event_name}' is disabled (active=0). Is this intended?",
+      "severity": "warning"
+    },
+    
+    "zero_nominal_warning": {
+      "description": "Event avec nominal=0",
+      "error_message_fr": "Event '{event_name}' a nominal=0. Il ne spawnera pas (sauf si actif pour autre raison).",
+      "error_message_en": "Event '{event_name}' has nominal=0. It will not spawn (unless active for other reason).",
+      "severity": "warning"
+    }
+  },
+  
+  "event_categories": {
+    "ambient": {
+      "description": "Animaux ambiants (renards, lièvres, poules)",
+      "prefix": "Ambient",
+      "typical_values": {
+        "nominal": "0-3",
+        "lifetime": "33 minutes",
+        "position": "fixed"
+      }
+    },
+    "animals": {
+      "description": "Animaux sauvages (ours, cerfs, loups, etc.)",
+      "prefix": "Animal",
+      "typical_values": {
+        "nominal": "0-9",
+        "lifetime": "180 minutes (3h)",
+        "position": "fixed",
+        "remove_damaged": "1"
+      }
+    },
+    "infected": {
+      "description": "Hordes de zombies dynamiques",
+      "prefix": "Infected",
+      "typical_values": {
+        "nominal": "50",
+        "min": "25",
+        "max": "250",
+        "lifetime": "3 minutes",
+        "position": "player"
+      }
+    },
+    "static": {
+      "description": "Events statiques (crashs, convois, objets)",
+      "prefix": "Static",
+      "typical_values": {
+        "nominal": "3-10",
+        "lifetime": "7200 minutes (5 jours)",
+        "position": "fixed",
+        "loot": "5-10 items"
+      }
+    },
+    "vehicles": {
+      "description": "Véhicules persistants",
+      "prefix": "Vehicle",
+      "typical_values": {
+        "nominal": "3-8",
+        "lifetime": "300 minutes (5h)",
+        "position": "fixed",
+        "saferadius": "500"
+      }
+    },
+    "trajectory": {
+      "description": "Ressources naturelles (fruits, champignons)",
+      "prefix": "Trajectory",
+      "typical_values": {
+        "nominal": "140",
+        "lifetime": "180 minutes",
+        "position": "player"
+      }
+    }
+  },
+  
+  "common_errors": {
+    "events_not_spawning": {
+      "symptom": "Events ne spawnent pas",
+      "causes": [
+        "active=0 (event désactivé)",
+        "nominal=0 (aucune instance cible)",
+        "Positions manquantes dans cfgeventspawns.xml",
+        "min > nominal"
+      ],
+      "solution": "Vérifier active=1, nominal>0, et cfgeventspawns.xml"
+    },
+    "too_many_events": {
+      "symptom": "Trop d'events simultanés",
+      "cause": "max trop élevé",
+      "solution": "Diminuer max (ex: 10 au lieu de 250)"
+    },
+    "events_despawn_fast": {
+      "symptom": "Events despawnent trop vite",
+      "cause": "lifetime trop court",
+      "solution": "Augmenter lifetime"
+    }
+  },
+  
+  "reference_values": {
+    "StaticHeliCrash": {
+      "nominal": 3,
+      "min": 2,
+      "max": 4,
+      "lifetime": 7200,
+      "loot": "5-10 items"
+    },
+    "AnimalDeer": {
+      "nominal": 9,
+      "min": 2,
+      "max": 4,
+      "lifetime": 180
+    },
+    "InfectedArmy": {
+      "nominal": 50,
+      "min": 25,
+      "max": 250,
+      "lifetime": 3
+    },
+    "VehicleCivilianSedan": {
+      "nominal": 8,
+      "min": 5,
+      "max": 11,
+      "lifetime": 300
+    }
+  },
+  
+  "tips": {
+    "general": [
+      "Toujours vérifier que position=fixed a des positions dans cfgeventspawns.xml",
+      "Events avec position=player spawnent autour des joueurs",
+      "lifetime est en MINUTES pour la plupart des events",
+      "min garantit un nombre minimum, même si nominal=0"
+    ],
+    "performance": [
+      "Éviter trop d'events avec position=player simultanément",
+      "Utiliser restock>0 pour events rares/coûteux",
+      "Ajuster saferadius pour éviter spawns trop proches des joueurs"
+    ],
+    "balancing": [
+      "Augmenter nominal = plus d'events",
+      "Augmenter lifetime = events persistent plus longtemps",
+      "Diminuer saferadius = events peuvent spawn plus près"
+    ]
+  }
+}

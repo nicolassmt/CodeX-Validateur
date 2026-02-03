@@ -1,0 +1,309 @@
+{
+  "version": "1.28",
+  "file_type": "economy.xml",
+  "description": "Schéma de validation pour economy.xml (cfgeconomycore.xml) DayZ 1.28 - Configuration économique globale",
+  "last_updated": "2025-01-30",
+  
+  "structure": {
+    "root_element": "economy",
+    "required_systems": [
+      "dynamic",
+      "animals",
+      "zombies",
+      "vehicles",
+      "randoms",
+      "custom",
+      "building",
+      "player"
+    ]
+  },
+  
+  "system_element": {
+    "self_closing": true,
+    "required_attributes": ["init", "load", "respawn", "save"],
+    "attributes": {
+      "init": {
+        "type": "boolean_int",
+        "values": [0, 1],
+        "description": "Active (1) ou désactive (0) le système à l'init serveur"
+      },
+      "load": {
+        "type": "boolean_int",
+        "values": [0, 1],
+        "description": "Charge (1) ou non (0) les données sauvegardées depuis BDD"
+      },
+      "respawn": {
+        "type": "boolean_int",
+        "values": [0, 1],
+        "description": "Active (1) ou désactive (0) le respawn automatique"
+      },
+      "save": {
+        "type": "boolean_int",
+        "values": [0, 1],
+        "description": "Sauvegarde (1) ou non (0) les données en BDD"
+      }
+    }
+  },
+  
+  "systems": {
+    "dynamic": {
+      "description": "Items de loot dynamique (types.xml)",
+      "impact": "Tous les items : armes, vêtements, nourriture, outils",
+      "vanilla_config": "1 1 1 1",
+      "recommended_config": "1 1 1 1",
+      "warning": "CRITIQUE - Ne jamais désactiver load/save sauf wipe intentionnel",
+      "typical_configs": {
+        "vanilla": {"init": 1, "load": 1, "respawn": 1, "save": 1},
+        "hardcore": {"init": 1, "load": 1, "respawn": 0, "save": 1},
+        "wipe": {"init": 1, "load": 0, "respawn": 1, "save": 0}
+      }
+    },
+    "animals": {
+      "description": "Animaux sauvages (events.xml)",
+      "impact": "Cerfs, ours, loups, vaches, etc.",
+      "vanilla_config": "1 0 1 0",
+      "recommended_config": "1 0 1 0",
+      "note": "Volatiles par défaut (pas de persistence)",
+      "typical_configs": {
+        "vanilla": {"init": 1, "load": 0, "respawn": 1, "save": 0},
+        "disabled": {"init": 0, "load": 0, "respawn": 0, "save": 0},
+        "persistent": {"init": 1, "load": 1, "respawn": 1, "save": 1}
+      }
+    },
+    "zombies": {
+      "description": "Zombies infectés (zombie_territories.xml + events.xml)",
+      "impact": "Tous les zombies statiques et dynamiques",
+      "vanilla_config": "1 0 1 0",
+      "recommended_config": "1 0 1 0",
+      "note": "Volatiles par défaut (pas de persistence)",
+      "typical_configs": {
+        "vanilla": {"init": 1, "load": 0, "respawn": 1, "save": 0},
+        "disabled_pvp": {"init": 0, "load": 0, "respawn": 0, "save": 0}
+      }
+    },
+    "vehicles": {
+      "description": "Véhicules (events.xml)",
+      "impact": "Voitures, camions, bateaux",
+      "vanilla_config": "1 1 1 1",
+      "recommended_config": "1 1 1 1",
+      "warning": "load=0 ou save=0 = perte véhicules au restart",
+      "typical_configs": {
+        "vanilla": {"init": 1, "load": 1, "respawn": 1, "save": 1},
+        "disabled": {"init": 0, "load": 0, "respawn": 0, "save": 0},
+        "wipe": {"init": 1, "load": 0, "respawn": 1, "save": 0}
+      }
+    },
+    "randoms": {
+      "description": "Spawns aléatoires (système custom)",
+      "impact": "Système peu utilisé en vanilla",
+      "vanilla_config": "0 0 1 0",
+      "recommended_config": "0 0 1 0",
+      "note": "Désactivé par défaut, pour configs custom",
+      "typical_configs": {
+        "disabled": {"init": 0, "load": 0, "respawn": 1, "save": 0},
+        "enabled": {"init": 1, "load": 0, "respawn": 1, "save": 0}
+      }
+    },
+    "custom": {
+      "description": "Système custom/mods",
+      "impact": "Réservé pour mods",
+      "vanilla_config": "0 0 0 0",
+      "recommended_config": "0 0 0 0",
+      "note": "Complètement désactivé en vanilla",
+      "typical_configs": {
+        "disabled": {"init": 0, "load": 0, "respawn": 0, "save": 0},
+        "mod_enabled": {"init": 1, "load": 1, "respawn": 1, "save": 1}
+      }
+    },
+    "building": {
+      "description": "Constructions joueurs",
+      "impact": "Bases, tentes, barils, murs, tours",
+      "vanilla_config": "1 1 0 1",
+      "recommended_config": "1 1 0 1",
+      "warning": "CRITIQUE - load=0 ou save=0 = perte TOUTES les bases",
+      "validation_rule": "respawn doit TOUJOURS être 0 (bases ne respawnent pas)",
+      "typical_configs": {
+        "vanilla": {"init": 1, "load": 1, "respawn": 0, "save": 1},
+        "wipe": {"init": 1, "load": 0, "respawn": 0, "save": 0}
+      }
+    },
+    "player": {
+      "description": "Joueurs",
+      "impact": "Données joueurs : position, inventaire, santé",
+      "vanilla_config": "1 1 1 1",
+      "recommended_config": "1 1 1 1",
+      "warning": "ULTRA-CRITIQUE - NE JAMAIS MODIFIER sauf cas spéciaux",
+      "validation_rule": "Doit TOUJOURS être 1 1 1 1 (sauf serveurs très spéciaux)",
+      "typical_configs": {
+        "vanilla": {"init": 1, "load": 1, "respawn": 1, "save": 1}
+      }
+    }
+  },
+  
+  "validation_rules": {
+    "binary_values": {
+      "description": "Tous les attributs doivent être 0 ou 1",
+      "error_message_fr": "Système '{system}': attribut '{attribute}' doit être 0 ou 1 (actuellement : {value})",
+      "error_message_en": "System '{system}': attribute '{attribute}' must be 0 or 1 (currently: {value})",
+      "severity": "error"
+    },
+    
+    "building_respawn_zero": {
+      "description": "building doit avoir respawn=0",
+      "error_message_fr": "Système 'building': respawn doit être 0 (les bases ne doivent PAS respawner), actuellement : {value}",
+      "error_message_en": "System 'building': respawn must be 0 (buildings should NOT respawn), currently: {value}",
+      "severity": "error"
+    },
+    
+    "player_all_enabled": {
+      "description": "player devrait être 1 1 1 1",
+      "error_message_fr": "Système 'player': configuration inhabituelle détectée. Vanilla recommandé : 1 1 1 1. Actuel : {config}",
+      "error_message_en": "System 'player': unusual config detected. Vanilla recommended: 1 1 1 1. Current: {config}",
+      "severity": "warning"
+    },
+    
+    "load_without_save_warning": {
+      "description": "load=1 sans save=1 est incohérent",
+      "error_message_fr": "Système '{system}': load=1 mais save=0. Rien ne sera sauvegardé, donc rien à charger. Est-ce voulu ?",
+      "error_message_en": "System '{system}': load=1 but save=0. Nothing will be saved, so nothing to load. Is this intended?",
+      "severity": "warning"
+    },
+    
+    "critical_system_disabled": {
+      "description": "Système critique désactivé",
+      "error_message_fr": "Système CRITIQUE '{system}': save=0 ou load=0 détecté. ATTENTION : perte de données au restart !",
+      "error_message_en": "CRITICAL system '{system}': save=0 or load=0 detected. WARNING: data loss on restart!",
+      "severity": "warning",
+      "applies_to": ["dynamic", "vehicles", "building", "player"]
+    }
+  },
+  
+  "common_errors": {
+    "bases_disappear": {
+      "symptom": "Bases joueurs disparaissent à chaque restart",
+      "cause": "building avec load=0 ou save=0",
+      "solution": "<building init=\"1\" load=\"1\" respawn=\"0\" save=\"1\"/>",
+      "severity": "critical"
+    },
+    "vehicles_reset": {
+      "symptom": "Véhicules réparés reviennent à l'état initial",
+      "cause": "vehicles avec load=0 ou save=0",
+      "solution": "<vehicles init=\"1\" load=\"1\" respawn=\"1\" save=\"1\"/>",
+      "severity": "high"
+    },
+    "players_lose_all": {
+      "symptom": "Joueurs perdent tout à chaque restart",
+      "cause": "player avec load=0 ou save=0",
+      "solution": "<player init=\"1\" load=\"1\" respawn=\"1\" save=\"1\"/>",
+      "severity": "critical"
+    },
+    "server_overload": {
+      "symptom": "Serveur lag, BDD surchargée",
+      "cause": "Trop de systèmes avec save=1",
+      "solution": "Ne sauvegarder que ce qui doit persister (animals/zombies save=0)",
+      "severity": "medium"
+    }
+  },
+  
+  "server_types": {
+    "vanilla_standard": {
+      "description": "Configuration vanilla équilibrée",
+      "config": {
+        "dynamic": "1 1 1 1",
+        "animals": "1 0 1 0",
+        "zombies": "1 0 1 0",
+        "vehicles": "1 1 1 1",
+        "randoms": "0 0 1 0",
+        "custom": "0 0 0 0",
+        "building": "1 1 0 1",
+        "player": "1 1 1 1"
+      }
+    },
+    "pvp_pure": {
+      "description": "PvP sans zombies",
+      "config": {
+        "dynamic": "1 1 1 1",
+        "animals": "1 0 1 0",
+        "zombies": "0 0 0 0",
+        "vehicles": "1 1 1 1",
+        "randoms": "0 0 1 0",
+        "custom": "0 0 0 0",
+        "building": "1 1 0 1",
+        "player": "1 1 1 1"
+      }
+    },
+    "hardcore_survival": {
+      "description": "Survie hardcore, peu de loot",
+      "config": {
+        "dynamic": "1 1 0 1",
+        "animals": "0 0 0 0",
+        "zombies": "1 0 1 0",
+        "vehicles": "0 0 0 0",
+        "randoms": "0 0 1 0",
+        "custom": "0 0 0 0",
+        "building": "1 1 0 1",
+        "player": "1 1 1 1"
+      }
+    },
+    "fresh_start_wipe": {
+      "description": "Wipe régulier (loot/bases reset)",
+      "config": {
+        "dynamic": "1 0 1 0",
+        "animals": "1 0 1 0",
+        "zombies": "1 0 1 0",
+        "vehicles": "1 0 1 0",
+        "randoms": "0 0 1 0",
+        "custom": "0 0 0 0",
+        "building": "1 0 0 0",
+        "player": "1 1 1 1"
+      }
+    }
+  },
+  
+  "tips": {
+    "general": [
+      "Ce fichier est COURT mais CRITIQUE - un seul flag peut casser le serveur",
+      "Toujours backup avant modification",
+      "Tester sur serveur test avant prod",
+      "player doit TOUJOURS être 1 1 1 1 (sauf cas très spéciaux)"
+    ],
+    "performance": [
+      "animals et zombies en 1 0 1 0 = meilleure performance (pas de save BDD)",
+      "Désactiver randoms et custom si non utilisés",
+      "save=0 réduit la charge BDD mais perte de persistence"
+    ],
+    "persistence": [
+      "load=1 + save=1 = persistence entre restarts",
+      "load=0 + save=0 = volatil (reset à chaque restart)",
+      "building et player doivent TOUJOURS avoir save=1 (sauf wipe intentionnel)"
+    ],
+    "safety": [
+      "NE JAMAIS mettre building load=0 ou save=0 sans avertir les joueurs",
+      "NE JAMAIS modifier player sauf si vous savez ce que vous faites",
+      "vehicles load=0 = perte véhicules réparés"
+    ]
+  },
+  
+  "flag_combinations": {
+    "persistent": {
+      "flags": "1 1 1 1",
+      "description": "Entités persistent entre restarts",
+      "applies_to": ["dynamic", "vehicles", "building", "player"]
+    },
+    "volatile": {
+      "flags": "1 0 1 0",
+      "description": "Entités respawnent frais à chaque restart",
+      "applies_to": ["animals", "zombies"]
+    },
+    "disabled": {
+      "flags": "0 0 0 0",
+      "description": "Système complètement désactivé",
+      "applies_to": ["randoms", "custom", "ou tout autre si désiré"]
+    },
+    "wipe": {
+      "flags": "1 0 1 0",
+      "description": "Reset du système (pas de load/save)",
+      "applies_to": ["Tout système pour wipe"]
+    }
+  }
+}

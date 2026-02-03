@@ -1,0 +1,419 @@
+{
+  "version": "1.28",
+  "map": "Chernarus",
+  "file_type": "types.xml",
+  "description": "Schéma de validation pour types.xml DayZ 1.28 - Gestion des spawns d'items",
+  "last_updated": "2025-01-30",
+  
+  "structure": {
+    "root_element": "types",
+    "root_attributes": {
+      "xmlns:xsi": "optional",
+      "xsi:noNamespaceSchemaLocation": "optional"
+    },
+    "child_element": "type",
+    "multiple_children": true
+  },
+  
+  "type_element": {
+    "attributes": {
+      "name": {
+        "required": true,
+        "type": "string",
+        "description": "Nom technique de l'item (classname)",
+        "validation": "non_empty",
+        "exemple": "AK74"
+      }
+    },
+    
+    "children": {
+      "nominal": {
+        "required": true,
+        "type": "integer",
+        "min": 0,
+        "max": 10000,
+        "description": "Nombre cible d'items sur la map",
+        "validation_rules": [
+          "must_be_greater_or_equal_to_min"
+        ],
+        "exemples": {
+          "desactive": 0,
+          "unique": 1,
+          "rare": 10,
+          "moyen": 50,
+          "commun": 200
+        }
+      },
+      
+      "lifetime": {
+        "required": true,
+        "type": "integer",
+        "min": 1,
+        "max": 86400,
+        "description": "Durée de vie en secondes avant despawn",
+        "validation_rules": [
+          "must_be_greater_than_zero"
+        ],
+        "valeurs_courantes": {
+          "1h": 3600,
+          "2h": 7200,
+          "4h": 14400,
+          "8h": 28800,
+          "24h": 86400
+        }
+      },
+      
+      "restock": {
+        "required": true,
+        "type": "integer",
+        "min": 0,
+        "max": 86400,
+        "description": "Temps avant respawn possible en secondes",
+        "valeur_speciale": {
+          "0": "Respawn immédiat si sous le nominal"
+        },
+        "exemples": {
+          "immediat": 0,
+          "30min": 1800,
+          "1h": 3600
+        }
+      },
+      
+      "min": {
+        "required": true,
+        "type": "integer",
+        "min": 0,
+        "max": 10000,
+        "description": "Nombre minimum garanti sur la map",
+        "validation_rules": [
+          "must_be_less_or_equal_to_nominal"
+        ]
+      },
+      
+      "quantmin": {
+        "required": false,
+        "type": "integer",
+        "min": -1,
+        "max": 100,
+        "description": "Quantité/charge minimum au spawn",
+        "valeur_speciale": {
+          "-1": "Non applicable (item non stackable)"
+        }
+      },
+      
+      "quantmax": {
+        "required": false,
+        "type": "integer",
+        "min": -1,
+        "max": 100,
+        "description": "Quantité/charge maximum au spawn",
+        "validation_rules": [
+          "must_be_greater_or_equal_to_quantmin"
+        ],
+        "valeur_speciale": {
+          "-1": "Non applicable (item non stackable)"
+        }
+      },
+      
+      "cost": {
+        "required": false,
+        "type": "integer",
+        "min": 0,
+        "max": 100,
+        "default": 100,
+        "description": "Coût économique de l'item"
+      },
+      
+      "flags": {
+        "required": false,
+        "type": "element_with_attributes",
+        "self_closing": true,
+        "description": "Drapeaux de comportement",
+        "attributes": {
+          "count_in_cargo": {
+            "type": "boolean_int",
+            "values": [0, 1],
+            "default": 0,
+            "description": "Compter items dans véhicules/containers"
+          },
+          "count_in_hoarder": {
+            "type": "boolean_int",
+            "values": [0, 1],
+            "default": 0,
+            "description": "Compter items dans bases/planques"
+          },
+          "count_in_map": {
+            "type": "boolean_int",
+            "values": [0, 1],
+            "default": 1,
+            "description": "Compter items au sol sur la map"
+          },
+          "count_in_player": {
+            "type": "boolean_int",
+            "values": [0, 1],
+            "default": 0,
+            "description": "Compter items sur les joueurs"
+          },
+          "crafted": {
+            "type": "boolean_int",
+            "values": [0, 1],
+            "default": 0,
+            "description": "Item obtenu uniquement par craft"
+          },
+          "deloot": {
+            "type": "boolean_int",
+            "values": [0, 1],
+            "default": 0,
+            "description": "Peut être supprimé par cleanup"
+          }
+        },
+        "configuration_standard": {
+          "count_in_cargo": 0,
+          "count_in_hoarder": 0,
+          "count_in_map": 1,
+          "count_in_player": 0,
+          "crafted": 0,
+          "deloot": 0
+        }
+      },
+      
+      "category": {
+        "required": false,
+        "type": "enum",
+        "quantity": "single",
+        "self_closing": true,
+        "description": "Catégorie fonctionnelle de l'item",
+        "attribute": "name",
+        "values": [
+          "weapons",
+          "clothes",
+          "food",
+          "tools",
+          "containers",
+          "explosives"
+        ],
+        "descriptions": {
+          "weapons": "Armes et accessoires",
+          "clothes": "Vêtements et équipement",
+          "food": "Nourriture et boissons",
+          "tools": "Outils et utilitaires",
+          "containers": "Sacs, caisses, conteneurs",
+          "explosives": "Explosifs et grenades"
+        }
+      },
+      
+      "usage": {
+        "required": false,
+        "type": "enum",
+        "quantity": "multiple",
+        "self_closing": true,
+        "description": "Zones géographiques de spawn",
+        "attribute": "name",
+        "values": [
+          "Military",
+          "Police",
+          "Firefighter",
+          "Medic",
+          "Office",
+          "School",
+          "Town",
+          "Village",
+          "Coast",
+          "Farm",
+          "Hunting",
+          "Industrial",
+          "Prison",
+          "ContaminatedArea",
+          "Historical",
+          "Lunapark",
+          "SeasonalEvent"
+        ],
+        "descriptions": {
+          "Military": "Bases militaires, checkpoints",
+          "Police": "Postes de police",
+          "Firefighter": "Casernes de pompiers",
+          "Medic": "Hôpitaux, cliniques",
+          "Office": "Bureaux",
+          "School": "Écoles",
+          "Town": "Villes moyennes",
+          "Village": "Petits villages",
+          "Coast": "Zones côtières",
+          "Farm": "Fermes",
+          "Hunting": "Zones de chasse",
+          "Industrial": "Zones industrielles",
+          "Prison": "Prison",
+          "ContaminatedArea": "Zones toxiques",
+          "Historical": "Sites historiques",
+          "Lunapark": "Parc d'attractions",
+          "SeasonalEvent": "Événements saisonniers"
+        },
+        "note": "Pas de <usage> = item ne spawn pas naturellement"
+      },
+      
+      "value": {
+        "required": false,
+        "type": "enum",
+        "quantity": "multiple",
+        "self_closing": true,
+        "description": "Niveau de rareté / tier",
+        "attribute": "name",
+        "values": [
+          "Tier1",
+          "Tier2",
+          "Tier3",
+          "Tier4"
+        ],
+        "descriptions": {
+          "Tier1": "Très commun (côte, villages)",
+          "Tier2": "Commun (villes moyennes)",
+          "Tier3": "Rare (bases militaires secondaires)",
+          "Tier4": "Très rare (grandes bases militaires)"
+        },
+        "note": "Pas de <value> = spawn dans toutes les zones des <usage>"
+      },
+      
+      "tag": {
+        "required": false,
+        "type": "enum",
+        "quantity": "multiple",
+        "self_closing": true,
+        "description": "Tags spécifiques de spawn",
+        "attribute": "name",
+        "values": [
+          "shelves",
+          "floor",
+          "lootdispatch"
+        ],
+        "descriptions": {
+          "shelves": "Spawn sur étagères",
+          "floor": "Spawn au sol",
+          "lootdispatch": "Distribution spéciale"
+        },
+        "note": "Usage rare, principalement pour configs avancées"
+      }
+    }
+  },
+  
+  "validation_rules": {
+    "min_lte_nominal": {
+      "description": "min doit être ≤ nominal",
+      "error_message_fr": "Le minimum ({min}) ne peut pas être supérieur au nominal ({nominal})",
+      "error_message_en": "min ({min}) cannot be greater than nominal ({nominal})",
+      "severity": "error"
+    },
+    
+    "quantmin_lte_quantmax": {
+      "description": "quantmin doit être ≤ quantmax",
+      "error_message_fr": "La quantité minimum ({quantmin}) ne peut pas être supérieure à la quantité maximum ({quantmax})",
+      "error_message_en": "quantmin ({quantmin}) cannot be greater than quantmax ({quantmax})",
+      "severity": "error"
+    },
+    
+    "lifetime_positive": {
+      "description": "lifetime doit être > 0",
+      "error_message_fr": "La durée de vie doit être supérieure à 0 (actuellement : {lifetime})",
+      "error_message_en": "lifetime must be greater than 0 (currently: {lifetime})",
+      "severity": "error"
+    },
+    
+    "cost_range": {
+      "description": "cost doit être entre 0 et 100",
+      "error_message_fr": "Le coût doit être entre 0 et 100 (actuellement : {cost})",
+      "error_message_en": "cost must be between 0 and 100 (currently: {cost})",
+      "severity": "error"
+    },
+    
+    "flags_binary": {
+      "description": "Les flags doivent être 0 ou 1",
+      "error_message_fr": "Le flag '{flag_name}' doit être 0 ou 1 (actuellement : {value})",
+      "error_message_en": "Flag '{flag_name}' must be 0 or 1 (currently: {value})",
+      "severity": "error"
+    },
+    
+    "disabled_item_coherence": {
+      "description": "Item désactivé (nominal=0) devrait avoir min=0",
+      "error_message_fr": "Item désactivé (nominal=0) mais min={min}. Recommandation : mettre min=0",
+      "error_message_en": "Item disabled (nominal=0) but min={min}. Recommendation: set min=0",
+      "severity": "warning"
+    },
+    
+    "crafted_without_usage": {
+      "description": "Item craftable devrait généralement ne pas avoir de <usage>",
+      "error_message_fr": "Item avec crafted=1 a des <usage> définis. Est-ce voulu ? (spawn naturel ET craftable)",
+      "error_message_en": "Item with crafted=1 has <usage> defined. Is this intended? (natural spawn AND craftable)",
+      "severity": "warning"
+    },
+    
+    "no_usage_no_spawn": {
+      "description": "Item sans <usage> ne spawnera pas naturellement",
+      "error_message_fr": "Item avec nominal={nominal} mais sans <usage>. Il ne spawnera pas naturellement.",
+      "error_message_en": "Item with nominal={nominal} but no <usage>. It will not spawn naturally.",
+      "severity": "warning"
+    }
+  },
+  
+  "common_errors": {
+    "missing_usage": {
+      "symptom": "L'item ne spawn pas",
+      "cause": "Pas de balise <usage> définie",
+      "solution": "Ajouter au moins une balise <usage>"
+    },
+    "nominal_zero": {
+      "symptom": "L'item ne spawn pas",
+      "cause": "nominal=0 (item désactivé)",
+      "solution": "Augmenter nominal à une valeur > 0"
+    },
+    "min_greater_nominal": {
+      "symptom": "Erreur de configuration",
+      "cause": "min > nominal (impossible à respecter)",
+      "solution": "Mettre min ≤ nominal"
+    },
+    "too_many_spawns": {
+      "symptom": "Trop d'items d'un type",
+      "cause": "nominal trop élevé ou restock=0 avec nominal élevé",
+      "solution": "Diminuer nominal et/ou augmenter restock"
+    },
+    "items_disappear_fast": {
+      "symptom": "Items despawnent trop vite",
+      "cause": "lifetime trop court",
+      "solution": "Augmenter lifetime (ex: 14400 pour 4h)"
+    }
+  },
+  
+  "reference_values": {
+    "weapons": {
+      "pistol_common": {"nominal": 15, "lifetime": 28800, "restock": 1800},
+      "pistol_rare": {"nominal": 3, "lifetime": 28800, "restock": 3600},
+      "rifle_common": {"nominal": 6, "lifetime": 28800, "restock": 1800},
+      "rifle_rare": {"nominal": 2, "lifetime": 28800, "restock": 3600}
+    },
+    "food": {
+      "common": {"nominal": 80, "lifetime": 3600, "restock": 0},
+      "medium": {"nominal": 60, "lifetime": 3600, "restock": 0},
+      "rare": {"nominal": 30, "lifetime": 3600, "restock": 0}
+    },
+    "ammo": {
+      "common": {"nominal": 60, "lifetime": 14400, "restock": 1800},
+      "rare": {"nominal": 30, "lifetime": 14400, "restock": 3600}
+    }
+  },
+  
+  "tips": {
+    "balancing": [
+      "Utiliser les valeurs vanilla comme référence",
+      "Ajuster progressivement (±20% à la fois)",
+      "Tester sur 24h avant finaliser",
+      "Équilibrer nominal vs restock selon gameplay souhaité"
+    ],
+    "performance": [
+      "Éviter nominal > 500 pour un seul item",
+      "Préférer restock > 0 pour items communs",
+      "Utiliser lifetime adapté au type d'item"
+    ],
+    "testing": [
+      "Observer spawns pendant 2-3 restarts",
+      "Vérifier logs serveur (warnings économie)",
+      "Demander retours joueurs sur rareté perçue"
+    ]
+  }
+}
