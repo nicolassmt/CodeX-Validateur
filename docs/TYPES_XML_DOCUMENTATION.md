@@ -952,6 +952,6 @@ Tier4 (Grandes bases/NWAF)
 
 ---
 
-**📝 Document créé par Codex - L'outil pour la communauté DayZ FR**
+**📝 Document créé par CodeX - L'outil pour la communauté DayZ FR**
 **Version : 1.0 - Basé sur DayZ 1.28 Chernarus**
 **Dernière mise à jour : 2025**
