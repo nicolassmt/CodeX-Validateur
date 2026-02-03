@@ -140,7 +140,7 @@ st.markdown("""
 with st.sidebar:
     st.markdown("### 📚 Documentation")
     
-    github_base = "https://github.com/nicolassmt/codex-validateur/blob/main/docs/"
+    github_base = "https://github.com/EpSyDev/codex-validateur/blob/main/docs/"
     
     st.markdown(f"""
     **Fichiers DayZ documentés :**
