@@ -169,10 +169,20 @@ def create_map(zones_data, map_name, map_size, img_path):
     
     fig = go.Figure()
     
-    # Charger l'image de fond
+    # Charger l'image de fond avec calibration
     from PIL import Image
     import base64
     from io import BytesIO
+    
+    # PARAMÈTRES DE CALIBRATION PAR CARTE
+    # Format: (x_offset, y_offset, scale)
+    calibration = {
+        'Chernarus': (0, 0, 1.0),      # À ajuster si besoin
+        'Livonia': (-200, 200, 1.02),  # Exemple: décalage et échelle
+        'Sakhal': (0, 0, 1.0)          # À ajuster si besoin
+    }
+    
+    x_offset, y_offset, scale = calibration.get(map_name, (0, 0, 1.0))
     
     try:
         img = Image.open(img_path)
@@ -180,15 +190,20 @@ def create_map(zones_data, map_name, map_size, img_path):
         img.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode()
         
+        # Position ajustée de l'image
+        img_x = x_offset
+        img_y = map_size + y_offset
+        img_size = map_size * scale
+        
         fig.add_layout_image(
             dict(
                 source=f"data:image/png;base64,{img_str}",
                 xref="x",
                 yref="y",
-                x=0,
-                y=map_size,
-                sizex=map_size,
-                sizey=map_size,
+                x=img_x,
+                y=img_y,
+                sizex=img_size,
+                sizey=img_size,
                 sizing="stretch",
                 opacity=0.7,
                 layer="below"
