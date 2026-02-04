@@ -112,10 +112,10 @@ st.markdown("""
 
 /* ✨ AMÉLIORÉ : Scroll pour le code analysé */
 .code-scroll {
-    max-height: 600px;           /* Hauteur max augmentée */
-    overflow-y: scroll;          /* Force TOUJOURS la scrollbar */
-    overflow-x: auto;            /* Scroll horizontal si besoin */
-    border: 2px solid #d1d5db;   /* Border plus visible */
+    max-height: 600px;
+    overflow-y: scroll !important;
+    overflow-x: auto;
+    border: 2px solid #d1d5db;
     border-radius: 10px;
     padding: 20px;
     background: #f9fafb;
@@ -142,6 +142,17 @@ st.markdown("""
     background: #6b7280;
 }
 
+/* ✨ NOUVEAU : Style pour text_area code complet */
+textarea[disabled] {
+    background: #f9fafb !important;
+    border: 2px solid #d1d5db !important;
+    border-radius: 10px !important;
+    font-family: 'Courier New', monospace !important;
+    font-size: 13px !important;
+    color: #1f2937 !important;
+    line-height: 1.5 !important;
+}
+
 /* Comparaison après correction */
 .correction-result {
     background: linear-gradient(135deg, #d1fae5, #a7f3d0);
@@ -155,7 +166,7 @@ st.markdown("""
 
 
 # ==============================
-# ✨ NOUVEAU : SIDEBAR
+# ✨ SIDEBAR
 # ==============================
 with st.sidebar:
     st.markdown("### 📚 Documentation")
@@ -338,7 +349,7 @@ st.markdown("---")
 if st.session_state.validation_result:
     result = st.session_state.validation_result
     
-    # ✨ NOUVEAU : Afficher le type DayZ détecté
+    # ✨ Afficher le type DayZ détecté
     if result.get("dayz_type"):
         dayz_type_names = {
             "types": "types.xml (Items & Loot)",
@@ -366,7 +377,7 @@ if st.session_state.validation_result:
         </div>
         """, unsafe_allow_html=True)
         
-        # ✨ NOUVEAU : Afficher les warnings sémantiques si présents
+        # ✨ Afficher les warnings sémantiques si présents
         if result.get("semantic_warnings") and len(result["semantic_warnings"]) > 0:
             warnings = result["semantic_warnings"]
             errors_count = sum(1 for w in warnings if w["severity"] == "error")
@@ -527,13 +538,22 @@ if st.session_state.validation_result:
         # ==============================
         # BLOC 3 : IDENTIFICATION
         # ==============================
-        st.markdown(f"""
+        # ✨ Extraire et afficher le nom de la balise si disponible
+        tag_name = matched.get("tag_name") if matched else None
+
+        identification_html = f"""
         <div class="block identification">
             <h4>🧩 Identification</h4>
             <p><b>Type de fichier :</b> {result["file_type"].upper()}</p>
             <p><b>Erreur détectée :</b> {matched["titre"] if matched else "Erreur de syntaxe"}</p>
-        </div>
-        """, unsafe_allow_html=True)
+        """
+
+        if tag_name:
+            identification_html += f'<p><b>🏷️ Balise concernée :</b> <code>&lt;{tag_name}&gt;</code></p>'
+
+        identification_html += "</div>"
+
+        st.markdown(identification_html, unsafe_allow_html=True)
         
         # ==============================
         # BLOC 4 : DESCRIPTION
@@ -589,7 +609,7 @@ if st.session_state.validation_result:
                 """)
         
         # ==============================
-        # BLOC 6 : CODE COMPLET (avec scroll)
+        # BLOC 6 : CODE COMPLET (avec scroll) - ✨ FIX ENCART BLANC
         # ==============================
         st.markdown("#### 📄 Code complet analysé")
         
@@ -602,9 +622,14 @@ if st.session_state.validation_result:
         
         highlighted_code = "\n".join(highlighted_lines)
         
-        st.markdown('<div class="code-scroll">', unsafe_allow_html=True)
-        st.code(highlighted_code, language=result["file_type"], line_numbers=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        # ✨ Utiliser st.text_area au lieu de st.code pour avoir le scroll qui fonctionne
+        st.text_area(
+            "Code complet",
+            value=highlighted_code,
+            height=600,
+            disabled=True,
+            label_visibility="collapsed"
+        )
         
         # Exemple de la DB en expander
         if matched and matched.get("exemple_avant"):
