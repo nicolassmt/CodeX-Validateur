@@ -182,7 +182,7 @@ with col1:
     
     st.markdown("")
     if st.button("🚀 Ouvrir le Validateur", use_container_width=True, type="primary"):
-        st.switch_page("pages/1_📝_Validateur.py")
+        st.switch_page("pages/1_Validateur.py")
 
 with col2:
     st.markdown("""
@@ -201,7 +201,7 @@ with col2:
     
     st.markdown("")
     if st.button("🗺️ Ouvrir la Carte", use_container_width=True, type="primary"):
-        st.switch_page("pages/2_🗺️_Carte_Interactive.py")
+        st.switch_page("pages/2_Carte_Interactive.py")
 
 with col3:
     st.markdown("""
@@ -222,7 +222,7 @@ with col3:
     
     st.markdown("")
     if st.button("📖 Lire la Documentation", use_container_width=True, type="primary"):
-        st.switch_page("pages/3_📚_Documentation.py")
+        st.switch_page("pages/3_Documentation.py")
 
 # ==============================
 # STATISTIQUES (optionnel)
