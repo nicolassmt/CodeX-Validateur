@@ -93,6 +93,40 @@ def get_zone_color(zone_name):
     
     return '#808080'
 
+def normalize_coordinates(zones, map_name, target_size):
+    """
+    Normalise les coordonnées DayZ vers le système iZurvive [0, target_size]
+    
+    Coordonnées réelles détectées :
+    - Chernarus: X[161-15158], Z[1253-15927]
+    - Livonia: X[290-12703], Z[368-12603]
+    - Sakhal: X[857-14650], Z[3883-13841]
+    """
+    if len(zones) == 0:
+        return zones
+    
+    # Détecter les ranges réels
+    x_coords = [z['x'] for z in zones]
+    z_coords = [z['z'] for z in zones]
+    
+    x_min = min(x_coords)
+    x_max = max(x_coords)
+    z_min = min(z_coords)
+    z_max = max(z_coords)
+    
+    # Normaliser
+    for zone in zones:
+        # Normaliser X vers [0, target_size]
+        zone['x_normalized'] = ((zone['x'] - x_min) / (x_max - x_min)) * target_size
+        
+        # Normaliser Z vers [0, target_size]
+        zone['z_normalized'] = ((zone['z'] - z_min) / (z_max - z_min)) * target_size
+        
+        # Calculer Y pour Plotly (inversé)
+        zone['y_plot'] = target_size - zone['z_normalized']
+    
+    return zones
+
 def generate_xml(zones):
     """Génère le XML depuis la liste de zones"""
     territories = {}
@@ -123,6 +157,10 @@ def generate_xml(zones):
 
 def create_map(zones_data, map_name, map_size, img_path):
     """Crée une carte interactive pour une map donnée"""
+    
+    # Normaliser les coordonnées
+    zones_data = normalize_coordinates(zones_data, map_name, map_size)
+    
     df = pd.DataFrame(zones_data)
     
     if len(df) == 0:
@@ -159,13 +197,13 @@ def create_map(zones_data, map_name, map_size, img_path):
     except Exception as e:
         st.warning(f"⚠️ Image de fond non trouvée pour {map_name}")
     
-    # Ajouter les marqueurs
+    # Ajouter les marqueurs avec coordonnées normalisées
     for zone_type in df['name'].unique():
         df_type = df[df['name'] == zone_type]
         
         fig.add_trace(go.Scatter(
-            x=df_type['x'],
-            y=map_size - df_type['z'],
+            x=df_type['x_normalized'],
+            y=df_type['y_plot'],
             mode='markers',
             name=zone_type,
             marker=dict(
@@ -176,7 +214,8 @@ def create_map(zones_data, map_name, map_size, img_path):
             ),
             text=[
                 f"<b>{row['name']}</b><br>" +
-                f"Position: ({row['x']:.0f}, {row['z']:.0f})<br>" +
+                f"Position DayZ: ({row['x']:.0f}, {row['z']:.0f})<br>" +
+                f"Position carte: ({row['x_normalized']:.0f}, {row['z_normalized']:.0f})<br>" +
                 f"Radius: {row['r']:.0f}m<br>" +
                 f"Spawn: {row['smin']}-{row['smax']}<br>" +
                 f"Dynamic: {row['dmin']}-{row['dmax']}<br>" +
@@ -189,7 +228,7 @@ def create_map(zones_data, map_name, map_size, img_path):
         ))
     
     fig.update_layout(
-        title=f"Carte {map_name} - Zones de spawn zombies (style iZurvive)",
+        title=f"Carte {map_name} - Zones de spawn zombies (coordonnées normalisées)",
         xaxis_title="",
         yaxis_title="",
         height=800,
@@ -472,7 +511,7 @@ with tab3:
     # Carte
     st.markdown("### 🗺️ Carte Sakhal")
     img_path = Path(__file__).parent.parent / "images" / "sakhal_map.webp"
-    fig = create_map(filtered_zones, "Sakhal", 12800, img_path)
+    fig = create_map(filtered_zones, "Sakhal", 15360, img_path)
     
     if fig:
         selected_point = st.plotly_chart(fig, use_container_width=True, on_select="rerun", key="map_sakhal")
