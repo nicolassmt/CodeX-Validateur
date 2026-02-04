@@ -384,24 +384,17 @@ if st.session_state.selected_zone:
             <h4>{zone['name']}</h4>
             <p><b>Position:</b> ({zone['x']:.1f}, {zone['z']:.1f})</p>
             <p><b>Radius:</b> {zone['r']}m</p>
+            <p><b>Statut:</b> {'✅ ACTIF' if zone['active'] else '❌ INACTIF'}</p>
         </div>
         """, unsafe_allow_html=True)
     
     with col_edit2:
-        # Toggle actif/inactif
+        # Toggle actif/inactif SANS rerun automatique
         zone_active = st.checkbox(
-            "Zone active",
+            "Activer cette zone",
             value=zone['active'],
-            key=f"active_{zone['x']}_{zone['z']}"
+            key=f"active_{id(zone)}"  # Clé unique stable
         )
-        
-        if zone_active != zone['active']:
-            # Mettre à jour dans la liste
-            for z in st.session_state.zones:
-                if z['x'] == zone['x'] and z['z'] == zone['z']:
-                    z['active'] = zone_active
-                    break
-            st.rerun()
     
     # Paramètres avancés
     with st.expander("⚙️ Paramètres avancés"):
@@ -415,17 +408,22 @@ if st.session_state.selected_zone:
             new_dmin = st.number_input("dmin", value=zone['dmin'], min_value=0, max_value=50)
         with col_p4:
             new_dmax = st.number_input("dmax", value=zone['dmax'], min_value=0, max_value=50)
+    
+    # Bouton pour sauvegarder TOUTES les modifications
+    if st.button("💾 Sauvegarder les modifications", type="primary", use_container_width=True):
+        # Trouver et mettre à jour la zone dans la liste
+        for z in st.session_state.zones:
+            if z['x'] == zone['x'] and z['z'] == zone['z']:
+                z['active'] = zone_active
+                z['smin'] = new_smin
+                z['smax'] = new_smax
+                z['dmin'] = new_dmin
+                z['dmax'] = new_dmax
+                break
         
-        if st.button("💾 Sauvegarder les modifications"):
-            for z in st.session_state.zones:
-                if z['x'] == zone['x'] and z['z'] == zone['z']:
-                    z['smin'] = new_smin
-                    z['smax'] = new_smax
-                    z['dmin'] = new_dmin
-                    z['dmax'] = new_dmax
-                    break
-            st.success("✅ Zone mise à jour !")
-            st.rerun()
+        st.success("✅ Zone mise à jour !")
+        st.session_state.selected_zone = None  # Réinitialiser la sélection
+        st.rerun()
 
 st.markdown("---")
 
