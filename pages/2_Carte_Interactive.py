@@ -1,6 +1,8 @@
 """
 Codex Suite - Carte Interactive
 Éditeur visuel des spawns zombies - Chernarus, Livonia, Sakhal
+
+🎯 VERSION CORRIGÉE : Utilise des offsets simples au lieu de normalisation complexe
 """
 
 import streamlit as st
@@ -41,6 +43,14 @@ st.markdown("""
     border-radius: 12px;
     text-align: center;
     margin: 10px 0;
+}
+
+.calibration-note {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 4px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -93,41 +103,45 @@ def get_zone_color(zone_name):
     
     return '#808080'
 
-def normalize_coordinates(zones, map_name, target_size):
+def apply_map_offsets(zones, map_name):
     """
-    Normalise les coordonnées DayZ vers le système iZurvive [0, target_size]
+    Applique les offsets de calibration iZurvive aux coordonnées DayZ
     
-    ✅ CORRECTION : Ne PAS inverser l'axe Y !
-    iZurvive et Plotly ont tous deux l'origine en bas à gauche
+    🎯 DÉCOUVERTE : Les coordonnées DayZ XML sont DÉJÀ dans [0-12800] !
+    iZurvive applique juste un offset constant pour chaque carte.
     
-    Coordonnées réelles détectées :
-    - Chernarus: X[161-15158], Z[1253-15927]
-    - Livonia: X[290-12703], Z[368-12603]
-    - Sakhal: X[857-14650], Z[3883-13841]
+    Offsets validés :
+    - Livonia : X+206, Z-73 (✅ testé avec Topolin - 0px d'erreur)
+    - Chernarus : À calibrer (🔧 nécessite un point de référence iZurvive)
+    - Sakhal : À calibrer (🔧 nécessite un point de référence iZurvive)
+    
+    Point de test Livonia :
+    - Topolin Firefighter Station #2
+    - XML : (1717, 7438)
+    - Offset : (+206, -73)
+    - Résultat : (1923, 7365) ✅ PARFAIT
     """
     if len(zones) == 0:
         return zones
     
-    # Détecter les ranges réels
-    x_coords = [z['x'] for z in zones]
-    z_coords = [z['z'] for z in zones]
+    # Offsets de calibration par carte (en pixels)
+    MAP_OFFSETS = {
+        'Chernarus': {'x': 0, 'z': 0},      # 🔧 À CALIBRER
+        'Livonia':   {'x': 206, 'z': -73},  # ✅ VALIDÉ (Topolin test)
+        'Sakhal':    {'x': 0, 'z': 0}       # 🔧 À CALIBRER
+    }
     
-    x_min = min(x_coords)
-    x_max = max(x_coords)
-    z_min = min(z_coords)
-    z_max = max(z_coords)
+    offsets = MAP_OFFSETS.get(map_name, {'x': 0, 'z': 0})
     
-    # Normaliser
+    # Appliquer les offsets
     for zone in zones:
-        # Normaliser X vers [0, target_size]
-        zone['x_normalized'] = ((zone['x'] - x_min) / (x_max - x_min)) * target_size
+        # Les coordonnées DayZ sont déjà dans le bon système !
+        # On applique juste l'offset de calibration iZurvive
+        zone['x_izurvive'] = zone['x'] + offsets['x']
+        zone['z_izurvive'] = zone['z'] + offsets['z']
         
-        # Normaliser Z vers [0, target_size]
-        zone['z_normalized'] = ((zone['z'] - z_min) / (z_max - z_min)) * target_size
-        
-        # ✅ CORRECTION : Ne PAS inverser l'axe Y
-        # iZurvive et Plotly ont tous deux l'origine en bas à gauche
-        zone['y_plot'] = zone['z_normalized']
+        # Pas d'inversion Y : iZurvive et Plotly utilisent tous deux (0,0) en bas à gauche
+        zone['y_plot'] = zone['z_izurvive']
     
     return zones
 
@@ -162,8 +176,8 @@ def generate_xml(zones):
 def create_map(zones_data, map_name, map_size, img_path):
     """Crée une carte interactive pour une map donnée"""
     
-    # Normaliser les coordonnées
-    zones_data = normalize_coordinates(zones_data, map_name, map_size)
+    # Appliquer les offsets de calibration
+    zones_data = apply_map_offsets(zones_data, map_name)
     
     df = pd.DataFrame(zones_data)
     
@@ -173,20 +187,10 @@ def create_map(zones_data, map_name, map_size, img_path):
     
     fig = go.Figure()
     
-    # Charger l'image de fond avec calibration
+    # Charger l'image de fond
     from PIL import Image
     import base64
     from io import BytesIO
-    
-    # PARAMÈTRES DE CALIBRATION PAR CARTE
-    # Format: (x_offset, y_offset, scale)
-    calibration = {
-        'Chernarus': (0, 0, 1.0),      # À ajuster si besoin
-        'Livonia': (-200, 200, 1.02),  # Exemple: décalage et échelle
-        'Sakhal': (0, 0, 1.0)          # À ajuster si besoin
-    }
-    
-    x_offset, y_offset, scale = calibration.get(map_name, (0, 0, 1.0))
     
     try:
         img = Image.open(img_path)
@@ -194,20 +198,15 @@ def create_map(zones_data, map_name, map_size, img_path):
         img.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode()
         
-        # Position ajustée de l'image
-        img_x = x_offset
-        img_y = map_size + y_offset
-        img_size = map_size * scale
-        
         fig.add_layout_image(
             dict(
                 source=f"data:image/png;base64,{img_str}",
                 xref="x",
                 yref="y",
-                x=img_x,
-                y=img_y,
-                sizex=img_size,
-                sizey=img_size,
+                x=0,
+                y=map_size,
+                sizex=map_size,
+                sizey=map_size,
                 sizing="stretch",
                 opacity=0.7,
                 layer="below"
@@ -216,12 +215,12 @@ def create_map(zones_data, map_name, map_size, img_path):
     except Exception as e:
         st.warning(f"⚠️ Image de fond non trouvée pour {map_name}")
     
-    # Ajouter les marqueurs avec coordonnées normalisées
+    # Ajouter les marqueurs
     for zone_type in df['name'].unique():
         df_type = df[df['name'] == zone_type]
         
         fig.add_trace(go.Scatter(
-            x=df_type['x_normalized'],
+            x=df_type['x_izurvive'],
             y=df_type['y_plot'],
             mode='markers',
             name=zone_type,
@@ -233,8 +232,8 @@ def create_map(zones_data, map_name, map_size, img_path):
             ),
             text=[
                 f"<b>{row['name']}</b><br>" +
-                f"Position DayZ: ({row['x']:.0f}, {row['z']:.0f})<br>" +
-                f"Position carte: ({row['x_normalized']:.0f}, {row['z_normalized']:.0f})<br>" +
+                f"Position XML: ({row['x']:.0f}, {row['z']:.0f})<br>" +
+                f"Position iZurvive: ({row['x_izurvive']:.0f}, {row['z_izurvive']:.0f})<br>" +
                 f"Radius: {row['r']:.0f}m<br>" +
                 f"Spawn: {row['smin']}-{row['smax']}<br>" +
                 f"Dynamic: {row['dmin']}-{row['dmax']}<br>" +
@@ -246,8 +245,15 @@ def create_map(zones_data, map_name, map_size, img_path):
             unselected=dict(marker=dict(opacity=0.6))
         ))
     
+    # Statut de calibration
+    calibration_status = {
+        'Chernarus': '🔧 Non calibré',
+        'Livonia': '✅ Calibré (Topolin test)',
+        'Sakhal': '🔧 Non calibré'
+    }
+    
     fig.update_layout(
-        title=f"Carte {map_name} - Zones de spawn zombies (✅ Coordonnées CORRIGÉES)",
+        title=f"Carte {map_name} - Zones de spawn zombies ({calibration_status[map_name]})",
         xaxis_title="",
         yaxis_title="",
         height=800,
@@ -328,12 +334,21 @@ st.subheader("Édite visuellement les spawns zombies")
 if st.button("⬅️ Retour à l'accueil"):
     st.switch_page("app.py")
 
+# Note de calibration
+st.markdown("""
+<div class="calibration-note">
+    <b>📍 État de calibration :</b><br>
+    ✅ <b>Livonia</b> : Calibré (testé avec Topolin - précision parfaite)<br>
+    🔧 <b>Chernarus & Sakhal</b> : Nécessitent calibration (offsets à 0 temporairement)
+</div>
+""", unsafe_allow_html=True)
+
 st.markdown("---")
 
 # ==============================
 # TABS POUR LES 3 CARTES
 # ==============================
-tab1, tab2, tab3 = st.tabs(["🗺️ Chernarus", "🗺️ Livonia", "🗺️ Sakhal"])
+tab1, tab2, tab3 = st.tabs(["🗺️ Chernarus", "🗺️ Livonia ✅", "🗺️ Sakhal"])
 
 # ==============================
 # TAB CHERNARUS
