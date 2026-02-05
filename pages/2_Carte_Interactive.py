@@ -97,6 +97,9 @@ def normalize_coordinates(zones, map_name, target_size):
     """
     Normalise les coordonnées DayZ vers le système iZurvive [0, target_size]
     
+    ✅ CORRECTION : Ne PAS inverser l'axe Y !
+    iZurvive et Plotly ont tous deux l'origine en bas à gauche
+    
     Coordonnées réelles détectées :
     - Chernarus: X[161-15158], Z[1253-15927]
     - Livonia: X[290-12703], Z[368-12603]
@@ -122,8 +125,9 @@ def normalize_coordinates(zones, map_name, target_size):
         # Normaliser Z vers [0, target_size]
         zone['z_normalized'] = ((zone['z'] - z_min) / (z_max - z_min)) * target_size
         
-        # Calculer Y pour Plotly (inversé)
-        zone['y_plot'] = target_size - zone['z_normalized']
+        # ✅ CORRECTION : Ne PAS inverser l'axe Y
+        # iZurvive et Plotly ont tous deux l'origine en bas à gauche
+        zone['y_plot'] = zone['z_normalized']
     
     return zones
 
@@ -243,7 +247,7 @@ def create_map(zones_data, map_name, map_size, img_path):
         ))
     
     fig.update_layout(
-        title=f"Carte {map_name} - Zones de spawn zombies (coordonnées normalisées)",
+        title=f"Carte {map_name} - Zones de spawn zombies (✅ Coordonnées CORRIGÉES)",
         xaxis_title="",
         yaxis_title="",
         height=800,
