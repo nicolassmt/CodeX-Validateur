@@ -110,25 +110,19 @@ def apply_map_offsets(zones, map_name):
     🎯 DÉCOUVERTE : Les coordonnées DayZ XML sont DÉJÀ dans [0-12800] !
     iZurvive applique juste un offset constant pour chaque carte.
     
-    Offsets validés :
-    - Livonia : X+206, Z-73 (✅ testé avec Topolin - 0px d'erreur)
-    - Chernarus : À calibrer (🔧 nécessite un point de référence iZurvive)
-    - Sakhal : À calibrer (🔧 nécessite un point de référence iZurvive)
-    
-    Point de test Livonia :
-    - Topolin Firefighter Station #2
-    - XML : (1717, 7438)
-    - Offset : (+206, -73)
-    - Résultat : (1923, 7365) ✅ PARFAIT
+    ✅ Offsets validés (précision parfaite - 0px d'erreur) :
+    - Chernarus : X-26, Z+17 (testé avec caserne de pompiers)
+    - Livonia : X+206, Z-73 (testé avec Topolin)
+    - Sakhal : X+0, Z-21 (testé avec caserne ouest)
     """
     if len(zones) == 0:
         return zones
     
     # Offsets de calibration par carte (en pixels)
     MAP_OFFSETS = {
-        'Chernarus': {'x': 0, 'z': 0},      # 🔧 À CALIBRER
-        'Livonia':   {'x': 206, 'z': -73},  # ✅ VALIDÉ (Topolin test)
-        'Sakhal':    {'x': 0, 'z': 0}       # 🔧 À CALIBRER
+        'Chernarus': {'x': -26, 'z': 17},    # ✅ VALIDÉ (Caserne pompiers)
+        'Livonia':   {'x': 206, 'z': -73},   # ✅ VALIDÉ (Topolin)
+        'Sakhal':    {'x': 0, 'z': -21}      # ✅ VALIDÉ (Caserne ouest)
     }
     
     offsets = MAP_OFFSETS.get(map_name, {'x': 0, 'z': 0})
@@ -247,9 +241,9 @@ def create_map(zones_data, map_name, map_size, img_path):
     
     # Statut de calibration
     calibration_status = {
-        'Chernarus': '🔧 Non calibré',
-        'Livonia': '✅ Calibré (Topolin test)',
-        'Sakhal': '🔧 Non calibré'
+        'Chernarus': '✅ Calibré',
+        'Livonia': '✅ Calibré',
+        'Sakhal': '✅ Calibré'
     }
     
     fig.update_layout(
@@ -338,8 +332,9 @@ if st.button("⬅️ Retour à l'accueil"):
 st.markdown("""
 <div class="calibration-note">
     <b>📍 État de calibration :</b><br>
-    ✅ <b>Livonia</b> : Calibré (testé avec Topolin - précision parfaite)<br>
-    🔧 <b>Chernarus & Sakhal</b> : Nécessitent calibration (offsets à 0 temporairement)
+    ✅ <b>Chernarus</b> : Calibré (précision parfaite)<br>
+    ✅ <b>Livonia</b> : Calibré (précision parfaite)<br>
+    ✅ <b>Sakhal</b> : Calibré (précision parfaite)
 </div>
 """, unsafe_allow_html=True)
 
@@ -348,7 +343,7 @@ st.markdown("---")
 # ==============================
 # TABS POUR LES 3 CARTES
 # ==============================
-tab1, tab2, tab3 = st.tabs(["🗺️ Chernarus", "🗺️ Livonia ✅", "🗺️ Sakhal"])
+tab1, tab2, tab3 = st.tabs(["🗺️ Chernarus ✅", "🗺️ Livonia ✅", "🗺️ Sakhal ✅"])
 
 # ==============================
 # TAB CHERNARUS
