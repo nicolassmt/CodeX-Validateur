@@ -120,24 +120,24 @@ def apply_map_offsets(zones, map_name):
     
     # Offsets de calibration par carte (en pixels)
     MAP_OFFSETS = {
-        'Chernarus': {'x': -26, 'z': 1017},   # ✅ AJUSTÉ (décalage vers le sud)
+        'Chernarus': {'x': -26, 'z': -783},   # ✅ AJUSTÉ (remonter les points)
         'Livonia':   {'x': 206, 'z': -73},    # ✅ VALIDÉ (Topolin)
         'Sakhal':    {'x': 0, 'z': -21}       # ✅ VALIDÉ (Caserne ouest)
     }
     
     offsets = MAP_OFFSETS.get(map_name, {'x': 0, 'z': 0})
     
-    # Appliquer les offsets
+    # Créer une COPIE des zones pour ne pas modifier les originales
+    zones_copy = []
     for zone in zones:
-        # Les coordonnées DayZ sont déjà dans le bon système !
-        # On applique juste l'offset de calibration iZurvive
-        zone['x_izurvive'] = zone['x'] + offsets['x']
-        zone['z_izurvive'] = zone['z'] + offsets['z']
-        
-        # Pas d'inversion Y : iZurvive et Plotly utilisent tous deux (0,0) en bas à gauche
-        zone['y_plot'] = zone['z_izurvive']
+        zone_copy = zone.copy()
+        # Appliquer les offsets pour l'affichage uniquement
+        zone_copy['x_izurvive'] = zone['x'] + offsets['x']
+        zone_copy['z_izurvive'] = zone['z'] + offsets['z']
+        zone_copy['y_plot'] = zone_copy['z_izurvive']
+        zones_copy.append(zone_copy)
     
-    return zones
+    return zones_copy
 
 def generate_xml(zones):
     """Génère le XML depuis la liste de zones"""
@@ -220,10 +220,10 @@ def create_map(zones_data, map_name, map_size, img_path):
             mode='markers',
             name=zone_type,
             marker=dict(
-                size=df_type['r'] / 10,  # Divisé par 10 au lieu de 5 (marqueurs 2x plus petits)
+                size=8,  # Taille fixe en pixels (ne change pas au zoom)
                 color=get_zone_color(zone_type),
                 opacity=0.9,
-                line=dict(width=2, color='white')
+                line=dict(width=1, color='white')
             ),
             text=[
                 f"<b>{row['name']}</b><br>" +
