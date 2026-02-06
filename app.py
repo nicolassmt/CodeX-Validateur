@@ -422,7 +422,7 @@ with col1:
     
     st.markdown("")
     if st.button("🚀 Ouvrir le Validateur", key="btn_validator"):
-        st.switch_page("pages/1_📝_Validateur.py")
+        st.switch_page("pages/1_Validateur.py")
 
 with col2:
     st.markdown("""
@@ -442,7 +442,7 @@ with col2:
     
     st.markdown("")
     if st.button("🗺️ Ouvrir la Carte", key="btn_map"):
-        st.switch_page("pages/2_🗺️_Carte_Interactive.py")
+        st.switch_page("pages/2_Carte_Interactive.py")
 
 with col3:
     st.markdown("""
@@ -462,7 +462,7 @@ with col3:
     
     st.markdown("")
     if st.button("📖 Documentation", key="btn_docs"):
-        st.switch_page("pages/3_📚_Documentation.py")
+        st.switch_page("pages/3_Documentation.py")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
