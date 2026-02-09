@@ -476,9 +476,6 @@ header {visibility: hidden;}
 st.markdown("""
 <div class="hero-container">
     <div class="hero-glow"></div>
-    <div class="logo-wrapper">
-        <img src="app/static/codex3-V2.png" style="max-width: 200px; filter: drop-shadow(0 0 30px rgba(0, 212, 255, 0.4));">
-    </div>
     <h1 class="hero-title">CODEX SUITE</h1>
     <p class="hero-subtitle">La boîte à outils ultime pour DayZ</p>
     <div class="pills-row">
