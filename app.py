@@ -50,7 +50,7 @@ header {visibility: hidden;}
         0 0 70px #00D4FF,
         0 0 100px rgba(0, 212, 255, 0.8),
         0 0 130px rgba(0, 212, 255, 0.6);
-    animation: logo-pulse 4s ease-in-out infinite;
+    animation: logo-pulse 2s ease-in-out infinite;
 }
 
 @keyframes logo-pulse {
@@ -315,7 +315,7 @@ header {visibility: hidden;}
 # HEADER
 st.markdown("""
 <div class="galactic-header">
-    <h1 class="galactic-logo">CODEX</h1>
+    <h1 class="galactic-logo">CodeX</h1>
     <p class="galactic-tagline">
         Serveur de Soutien et d'Entraide à la Communauté DayZ Francophone
     </p>
