@@ -23,9 +23,7 @@ st.markdown("""
 
 @font-face {
     font-family: 'Sawah';
-    src: url('https://cdn.jsdelivr.net/gh/EpSyDev/codex-validateur@main/static/fonts/Sawah_PersonalUseOnly.woff2') format('woff2'),
-         url('https://cdn.jsdelivr.net/gh/EpSyDev/codex-validateur@main/static/fonts/Sawah_PersonalUseOnly.woff') format('woff'),
-         url('https://cdn.jsdelivr.net/gh/EpSyDev/codex-validateur@main/static/fonts/Sawah_PersonalUseOnly.ttf') format('truetype');
+    src: url('https://cdn.jsdelivr.net/gh/EpSyDev/codex-validateur@main/static/fonts/Sawah_PersonalUseOnly.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
