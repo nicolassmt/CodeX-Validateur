@@ -5,17 +5,36 @@ Module pour charger le thème galactique CodeX dans Streamlit
 
 import streamlit as st
 from pathlib import Path
+import base64
 
 
 def load_css():
-    """Charge le CSS custom depuis assets/style.css"""
+    """Charge le CSS custom depuis assets/style.css avec image encodée"""
     css_file = Path(__file__).parent / "assets" / "style.css"
+    image_file = Path(__file__).parent / "assets" / "images" / "horizon-spatial.png"
     
-    if css_file.exists():
-        with open(css_file) as f:
-            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-    else:
+    if not css_file.exists():
         st.warning(f"⚠️ Fichier CSS non trouvé : {css_file}")
+        return
+    
+    # Lire le CSS
+    with open(css_file) as f:
+        css_content = f.read()
+    
+    # Encoder l'image en base64 si elle existe
+    if image_file.exists():
+        with open(image_file, "rb") as img_file:
+            img_data = base64.b64encode(img_file.read()).decode()
+            # Remplacer le chemin de l'image par la version base64
+            css_content = css_content.replace(
+                "url('./images/horizon-spatial.png')",
+                f"url('data:image/png;base64,{img_data}')"
+            )
+    else:
+        st.warning(f"⚠️ Image non trouvée : {image_file}")
+    
+    # Injecter le CSS
+    st.markdown(f'<style>{css_content}</style>', unsafe_allow_html=True)
 
 
 def render_header():
