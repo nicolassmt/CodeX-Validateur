@@ -37,8 +37,8 @@ header {visibility: hidden;}
 .galactic-logo {
     font-family: 'Michroma', 'Orbitron', monospace;
     font-weight: 900;
-    font-size: 260px;
-    letter-spacing: 70px;
+    font-size: 150px;
+    letter-spacing: 40px;
     color: #FFFFFF;
     text-transform: uppercase;
     margin: 0; padding: 0;
@@ -294,18 +294,18 @@ header {visibility: hidden;}
 
 /* RESPONSIVE */
 @media (max-width: 1200px) {
-    .galactic-logo { font-size: 180px; letter-spacing: 50px; }
+    .galactic-logo { font-size: 120px; letter-spacing: 32px; }
     .galactic-tagline { font-size: 14px; letter-spacing: 6px; }
 }
 
 @media (max-width: 768px) {
-    .galactic-logo { font-size: 100px; letter-spacing: 28px; }
+    .galactic-logo { font-size: 80px; letter-spacing: 20px; }
     .galactic-tagline { font-size: 11px; letter-spacing: 4px; }
     .section-title { font-size: 32px; }
 }
 
 @media (max-width: 480px) {
-    .galactic-logo { font-size: 60px; letter-spacing: 16px; }
+    .galactic-logo { font-size: 50px; letter-spacing: 12px; }
     .galactic-tagline { font-size: 9px; letter-spacing: 3px; }
 }
 </style>
