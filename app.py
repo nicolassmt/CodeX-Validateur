@@ -18,17 +18,6 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
 
-/* Police Sawah depuis GitHub */
-@font-face {
-    font-family: 'Sawah';
-    src: url('https://raw.githubusercontent.com/EpSyDev/codex-validateur/main/assets/fonts/Sawah_PersonalUseOnly.woff2') format('woff2'),
-         url('https://raw.githubusercontent.com/EpSyDev/codex-validateur/main/assets/fonts/Sawah_PersonalUseOnly.woff') format('woff'),
-         url('https://raw.githubusercontent.com/EpSyDev/codex-validateur/main/assets/fonts/Sawah_PersonalUseOnly.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
-
 * { font-family: 'Inter', sans-serif; }
 .stApp { background: #000000; }
 #MainMenu {visibility: hidden;}
@@ -46,7 +35,7 @@ header {visibility: hidden;}
 }
 
 .galactic-logo {
-    font-family: 'Sawah', 'Michroma', monospace;
+    font-family: 'Michroma', monospace;
     font-weight: normal;
     font-size: 260px;
     letter-spacing: 70px;
@@ -82,7 +71,7 @@ header {visibility: hidden;}
 }
 
 .galactic-tagline {
-    font-family: 'Sawah', 'Michroma', sans-serif;
+    font-family: 'Michroma', sans-serif;
     font-weight: normal;
     font-size: 16px;
     letter-spacing: 8px;
