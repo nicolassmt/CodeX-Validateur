@@ -1,6 +1,6 @@
 """
-Codex Suite - HYBRID LIGHT + GALACTIC HEADER
-Black × Glacier Blue + Header spatial
+Codex Suite - FINAL VERSION
+Header galactique + Modules
 Créé par EpSy
 """
 
@@ -8,13 +8,13 @@ import streamlit as st
 
 st.set_page_config(
     page_title="Codex Suite",
-    page_icon="images/favicon.png",
+    page_icon="🌌",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Image horizon spatial encodée en base64
-HORIZON_IMAGE = "/9j/4AAQSkZJRgABAQEBLAEsAAD/4QBWRXhpZgAATU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAAITAAMAAAABAAEAAAAAAAAAAAEsAAAAAQAAASwAAAAB/+0ALFBob3Rvc2hvcCAzLjAAOEJJTQQEAAAAAAAPHAFaAAMbJUccAQAA"  # Tronqué pour exemple
+# Image horizon spatial (à remplacer par la version complète base64)
+HORIZON_IMAGE = "/9j/4AAQSkZJRgABAQEBLAEsAAD/4QBWRXhpZgAATU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAAITAAMAAAABAAEAAAAAAAAAAAEsAAAAAQAAASwAAAAB"
 
 st.markdown(f"""
 <style>
@@ -34,18 +34,18 @@ footer {{visibility: hidden;}}
 header {{visibility: hidden;}}
 
 /* ═══════════════════════════════════════════════════════
-   HEADER GALACTIQUE (NOUVEAU)
+   HEADER GALACTIQUE
    ═══════════════════════════════════════════════════════ */
 
 .galactic-header {{
     background-image: url('data:image/jpeg;base64,{HORIZON_IMAGE}');
     background-size: cover;
     background-position: center bottom;
-    padding: 60px 20px 50px 20px;
+    padding: 70px 20px 55px 20px;
     text-align: center;
     position: relative;
     border-bottom: 2px solid #00D4FF;
-    margin-bottom: 40px;
+    margin-bottom: 60px;
     overflow: hidden;
 }}
 
@@ -54,9 +54,9 @@ header {{visibility: hidden;}}
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
     background: linear-gradient(180deg, 
-        rgba(0,0,0,0.9) 0%, 
-        rgba(0,0,0,0.6) 40%, 
-        rgba(0,0,0,0.85) 100%);
+        rgba(0,0,0,0.92) 0%, 
+        rgba(0,0,0,0.65) 40%, 
+        rgba(0,0,0,0.88) 100%);
     z-index: 1;
 }}
 
@@ -66,258 +66,224 @@ header {{visibility: hidden;}}
     bottom: -2px; left: 0; right: 0;
     height: 2px;
     background: #00D4FF;
-    box-shadow: 0 0 15px #00D4FF, 0 0 30px rgba(0, 212, 255, 0.5);
+    box-shadow: 0 0 15px #00D4FF, 0 0 30px rgba(0, 212, 255, 0.6);
     z-index: 3;
 }}
 
 .galactic-logo {{
     font-family: 'Michroma', 'Orbitron', monospace;
     font-weight: 900;
-    font-size: 84px;
-    letter-spacing: 24px;
+    font-size: 110px;
+    letter-spacing: 32px;
     color: #FFFFFF;
     text-transform: uppercase;
-    margin: 0; padding: 0;
+    margin: 0;
+    padding: 0;
     position: relative;
     z-index: 2;
     line-height: 1;
     text-shadow: 
-        0 0 10px rgba(255, 255, 255, 1),
-        0 0 20px #00D4FF,
-        0 0 40px #00D4FF,
-        0 0 60px rgba(0, 212, 255, 0.6);
+        0 0 15px rgba(255, 255, 255, 1),
+        0 0 30px #00D4FF,
+        0 0 50px #00D4FF,
+        0 0 70px rgba(0, 212, 255, 0.7),
+        0 0 90px rgba(0, 212, 255, 0.5);
     animation: logo-pulse 4s ease-in-out infinite;
 }}
 
 @keyframes logo-pulse {{
     0%, 100% {{
         text-shadow: 
-            0 0 10px rgba(255, 255, 255, 1),
-            0 0 20px #00D4FF,
-            0 0 40px #00D4FF,
-            0 0 60px rgba(0, 212, 255, 0.6);
+            0 0 15px rgba(255, 255, 255, 1),
+            0 0 30px #00D4FF,
+            0 0 50px #00D4FF,
+            0 0 70px rgba(0, 212, 255, 0.7);
     }}
     50% {{
         text-shadow: 
-            0 0 15px rgba(255, 255, 255, 1),
-            0 0 30px #00D4FF,
-            0 0 60px #00D4FF,
-            0 0 90px rgba(0, 212, 255, 0.8);
+            0 0 20px rgba(255, 255, 255, 1),
+            0 0 40px #00D4FF,
+            0 0 70px #00D4FF,
+            0 0 100px rgba(0, 212, 255, 0.9),
+            0 0 130px rgba(0, 212, 255, 0.6);
     }}
 }}
 
 .galactic-tagline {{
     font-family: 'Michroma', sans-serif;
     font-weight: normal;
-    font-size: 13px;
-    letter-spacing: 5px;
+    font-size: 14px;
+    letter-spacing: 6px;
     text-transform: uppercase;
-    color: rgba(0, 212, 255, 0.9);
-    margin-top: 20px;
+    color: rgba(0, 212, 255, 0.95);
+    margin-top: 24px;
     position: relative;
     z-index: 2;
-    text-shadow: 0 0 8px rgba(184, 230, 255, 0.6);
-}}
-
-@media (max-width: 768px) {{
-    .galactic-logo {{ font-size: 52px; letter-spacing: 14px; }}
-    .galactic-tagline {{ font-size: 10px; letter-spacing: 3px; }}
+    line-height: 1.6;
+    text-shadow: 0 0 10px rgba(184, 230, 255, 0.7);
 }}
 
 /* ═══════════════════════════════════════════════════════
-   TON CSS ACTUEL (CONSERVÉ)
+   MODULES
    ═══════════════════════════════════════════════════════ */
 
-/* HERO */
-.hero-box {{
-    text-align: center;
-    padding: 50px 20px 45px 20px;  /* Padding réduit car header au-dessus */
-}}
-
-.hero-title {{
-    font-size: 76px;
-    font-weight: 900;
-    background: linear-gradient(135deg, #00D4FF 0%, #38BDF8 50%, #0EA5E9 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 20px;
-    letter-spacing: -2px;
-    filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.3));
-}}
-
-.hero-sub {{
-    font-size: 22px;
-    color: rgba(0, 212, 255, 0.9);
-    margin-bottom: 45px;
-}}
-
-.pill {{
-    display: inline-block;
-    background: rgba(0, 212, 255, 0.08);
-    border: 1px solid rgba(0, 212, 255, 0.3);
-    color: #00D4FF;
-    padding: 11px 22px;
-    border-radius: 50px;
-    font-size: 13px;
-    font-weight: 600;
-    margin: 5px;
-    transition: all 0.3s ease;
-}}
-
-.pill:hover {{
-    background: rgba(0, 212, 255, 0.15);
-    border-color: rgba(0, 212, 255, 0.6);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 212, 255, 0.25);
-}}
-
-/* MODULES */
 .modules-wrapper {{
     max-width: 1400px;
     margin: 0 auto;
-    padding: 60px 30px;
+    padding: 40px 30px 80px 30px;
 }}
 
 .section-title {{
     text-align: center;
-    font-size: 36px;
+    font-size: 38px;
     font-weight: 800;
     color: #FFFFFF;
-    margin-bottom: 50px;
+    margin-bottom: 55px;
+    text-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
 }}
 
 .card {{
-    background: linear-gradient(135deg, rgba(0, 25, 50, 0.6) 0%, rgba(0, 15, 30, 0.7) 100%);
-    border: 1px solid rgba(0, 212, 255, 0.2);
+    background: linear-gradient(135deg, rgba(0, 25, 50, 0.65) 0%, rgba(0, 15, 30, 0.75) 100%);
+    border: 1px solid rgba(0, 212, 255, 0.25);
     border-radius: 26px;
-    padding: 42px 32px;
+    padding: 44px 34px;
     text-align: center;
     transition: all 0.4s ease;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    height: 100%;
 }}
 
 .card:hover {{
-    transform: translateY(-8px);
-    border-color: rgba(0, 212, 255, 0.5);
-    box-shadow: 0 15px 40px rgba(0, 212, 255, 0.25);
+    transform: translateY(-10px);
+    border-color: rgba(0, 212, 255, 0.6);
+    box-shadow: 0 18px 45px rgba(0, 212, 255, 0.3);
 }}
 
 .card-icon {{
-    font-size: 64px;
-    margin-bottom: 24px;
+    font-size: 68px;
+    margin-bottom: 26px;
     transition: transform 0.3s ease;
 }}
 
 .card:hover .card-icon {{
-    transform: scale(1.08);
+    transform: scale(1.12);
 }}
 
 .card-title {{
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 800;
     color: #FFFFFF;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
 }}
 
 .card-text {{
-    color: rgba(0, 212, 255, 0.8);
+    color: rgba(0, 212, 255, 0.85);
     font-size: 15px;
     line-height: 1.7;
-    margin-bottom: 24px;
+    margin-bottom: 26px;
 }}
 
 .card-list {{
     text-align: left;
-    margin-top: 22px;
-    padding-top: 22px;
-    border-top: 1px solid rgba(0, 212, 255, 0.12);
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(0, 212, 255, 0.15);
 }}
 
 .list-line {{
     color: #00D4FF;
     font-size: 13px;
-    margin: 10px 0;
-    padding-left: 20px;
+    margin: 11px 0;
+    padding-left: 22px;
+    position: relative;
 }}
 
 .list-line::before {{
     content: '→';
     position: absolute;
-    margin-left: -20px;
+    left: 0;
 }}
 
-/* STATS */
+/* ═══════════════════════════════════════════════════════
+   STATS
+   ═══════════════════════════════════════════════════════ */
+
 .stats-section {{
-    background: rgba(0, 0, 0, 0.4);
-    border-top: 1px solid rgba(0, 212, 255, 0.2);
-    border-bottom: 1px solid rgba(0, 212, 255, 0.2);
-    padding: 70px 30px;
-    margin: 90px 0;
+    background: rgba(0, 0, 0, 0.5);
+    border-top: 1px solid rgba(0, 212, 255, 0.25);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.25);
+    padding: 75px 30px;
+    margin: 100px 0;
 }}
 
 .stat {{
     text-align: center;
-    padding: 32px 22px;
-    background: rgba(0, 25, 50, 0.4);
-    border: 1px solid rgba(0, 212, 255, 0.15);
-    border-radius: 18px;
+    padding: 36px 24px;
+    background: rgba(0, 25, 50, 0.45);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 20px;
     transition: all 0.3s ease;
 }}
 
 .stat:hover {{
-    border-color: rgba(0, 212, 255, 0.4);
-    transform: translateY(-4px);
-    box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+    border-color: rgba(0, 212, 255, 0.45);
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(0, 212, 255, 0.25);
 }}
 
 .stat-num {{
-    font-size: 50px;
+    font-size: 54px;
     font-weight: 900;
     background: linear-gradient(135deg, #00D4FF, #38BDF8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }}
 
 .stat-label {{
-    color: rgba(0, 212, 255, 0.7);
+    color: rgba(0, 212, 255, 0.75);
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 1px;
 }}
 
-/* ROADMAP */
+/* ═══════════════════════════════════════════════════════
+   ROADMAP
+   ═══════════════════════════════════════════════════════ */
+
 .roadmap {{
     max-width: 1200px;
     margin: 0 auto;
-    padding: 70px 30px;
+    padding: 75px 30px;
 }}
 
 .roadmap-card {{
-    background: rgba(0, 25, 50, 0.5);
-    border: 1px solid rgba(0, 212, 255, 0.2);
-    border-radius: 22px;
-    padding: 42px;
+    background: rgba(0, 25, 50, 0.55);
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    border-radius: 24px;
+    padding: 44px;
     transition: all 0.3s ease;
 }}
 
 .roadmap-card:hover {{
-    border-color: rgba(0, 212, 255, 0.35);
-    box-shadow: 0 6px 25px rgba(0, 212, 255, 0.15);
+    border-color: rgba(0, 212, 255, 0.4);
+    box-shadow: 0 8px 30px rgba(0, 212, 255, 0.2);
 }}
 
 .roadmap-title {{
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 800;
     color: #FFFFFF;
-    margin-bottom: 26px;
+    margin-bottom: 28px;
 }}
 
 .roadmap-item {{
     color: #64748b;
     font-size: 15px;
-    margin: 13px 0;
-    padding-left: 30px;
+    margin: 14px 0;
+    padding-left: 32px;
+    position: relative;
 }}
 
 .roadmap-item.done {{
@@ -330,37 +296,44 @@ header {{visibility: hidden;}}
 
 .roadmap-item.done::before {{
     content: '✓ ';
+    position: absolute;
+    left: 0;
 }}
 
 .roadmap-item.wip::before {{
     content: '⟳ ';
+    position: absolute;
+    left: 0;
 }}
 
-/* FOOTER */
+/* ═══════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════ */
+
 .footer {{
     text-align: center;
-    padding: 65px 30px 45px 30px;
-    margin-top: 90px;
-    border-top: 1px solid rgba(0, 212, 255, 0.2);
+    padding: 70px 30px 50px 30px;
+    margin-top: 100px;
+    border-top: 1px solid rgba(0, 212, 255, 0.25);
 }}
 
 .footer-brand {{
-    font-size: 21px;
+    font-size: 22px;
     font-weight: 800;
     color: #FFFFFF;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }}
 
 .footer-text {{
     color: #64748b;
     font-size: 13px;
-    margin: 8px 0;
+    margin: 10px 0;
 }}
 
 .footer-link {{
     color: #00D4FF;
     text-decoration: none;
-    margin: 0 16px;
+    margin: 0 18px;
     font-size: 13px;
     font-weight: 600;
     transition: color 0.3s ease;
@@ -370,34 +343,47 @@ header {{visibility: hidden;}}
     color: #38BDF8;
 }}
 
-/* BUTTONS */
+/* ═══════════════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════════════ */
+
 .stButton > button {{
     width: 100%;
     background: linear-gradient(135deg, #00D4FF 0%, #0EA5E9 100%);
     color: #000000;
     border: none;
-    border-radius: 13px;
-    padding: 15px 30px;
+    border-radius: 14px;
+    padding: 16px 32px;
     font-size: 15px;
     font-weight: 700;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.25);
+    box-shadow: 0 5px 18px rgba(0, 212, 255, 0.3);
 }}
 
 .stButton > button:hover {{
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 212, 255, 0.35);
+    box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
 }}
 
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════ */
+
 @media (max-width: 768px) {{
-    .hero-title {{ font-size: 50px; }}
-    .hero-sub {{ font-size: 18px; }}
+    .galactic-logo {{ font-size: 60px; letter-spacing: 18px; }}
+    .galactic-tagline {{ font-size: 11px; letter-spacing: 4px; }}
+    .section-title {{ font-size: 32px; }}
+}}
+
+@media (max-width: 480px) {{
+    .galactic-logo {{ font-size: 44px; letter-spacing: 12px; }}
+    .galactic-tagline {{ font-size: 9px; letter-spacing: 3px; }}
 }}
 </style>
 """, unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════
-# HEADER GALACTIQUE (NOUVEAU)
+# HEADER GALACTIQUE
 # ═══════════════════════════════════════════════════════
 
 st.markdown("""
@@ -410,23 +396,132 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════
-# TON CONTENU ACTUEL (CONSERVÉ)
+# MODULES
 # ═══════════════════════════════════════════════════════
 
-# HERO
+st.markdown('<div class="modules-wrapper">', unsafe_allow_html=True)
+st.markdown('<h2 class="section-title">🚀 Modules disponibles</h2>', unsafe_allow_html=True)
+
+col1, col2, col3 = st.columns(3, gap="large")
+
+with col1:
+    st.markdown("""
+    <div class="card">
+        <div class="card-icon">📝</div>
+        <div class="card-title">Validateur</div>
+        <div class="card-text">Valide et corrige automatiquement tes fichiers de configuration DayZ</div>
+        <div class="card-list">
+            <div class="list-line">Détection erreurs</div>
+            <div class="list-line">Correction automatique</div>
+            <div class="list-line">Validation sémantique</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("")
+    if st.button("🚀 Ouvrir", key="v"):
+        st.switch_page("pages/1_Validateur.py")
+
+with col2:
+    st.markdown("""
+    <div class="card">
+        <div class="card-icon">🗺️</div>
+        <div class="card-title">Carte Interactive</div>
+        <div class="card-text">Édite visuellement les spawns zombies sur les cartes DayZ</div>
+        <div class="card-list">
+            <div class="list-line">Chernarus</div>
+            <div class="list-line">Livonia</div>
+            <div class="list-line">Sakhal</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("")
+    if st.button("🗺️ Ouvrir", key="m"):
+        st.switch_page("pages/2_Carte_Interactive.py")
+
+with col3:
+    st.markdown("""
+    <div class="card">
+        <div class="card-icon">📚</div>
+        <div class="card-title">Documentation</div>
+        <div class="card-text">Apprends à maîtriser les fichiers de configuration DayZ</div>
+        <div class="card-list">
+            <div class="list-line">types.xml</div>
+            <div class="list-line">events.xml</div>
+            <div class="list-line">economy.xml</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("")
+    if st.button("📖 Ouvrir", key="d"):
+        st.switch_page("pages/3_Documentation.py")
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# ═══════════════════════════════════════════════════════
+# STATS
+# ═══════════════════════════════════════════════════════
+
+st.markdown('<div class="stats-section">', unsafe_allow_html=True)
+st.markdown('<h2 class="section-title">📊 Codex en chiffres</h2>', unsafe_allow_html=True)
+
+s1, s2, s3, s4 = st.columns(4)
+with s1:
+    st.markdown('<div class="stat"><div class="stat-num">13+</div><div class="stat-label">Validateurs</div></div>', unsafe_allow_html=True)
+with s2:
+    st.markdown('<div class="stat"><div class="stat-num">100%</div><div class="stat-label">Auto</div></div>', unsafe_allow_html=True)
+with s3:
+    st.markdown('<div class="stat"><div class="stat-num">3</div><div class="stat-label">Maps</div></div>', unsafe_allow_html=True)
+with s4:
+    st.markdown('<div class="stat"><div class="stat-num">170+</div><div class="stat-label">Docs</div></div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# ═══════════════════════════════════════════════════════
+# ROADMAP
+# ═══════════════════════════════════════════════════════
+
+st.markdown('<div class="roadmap">', unsafe_allow_html=True)
+st.markdown('<h2 class="section-title">🛣️ Roadmap</h2>', unsafe_allow_html=True)
+
+r1, r2 = st.columns(2, gap="large")
+with r1:
+    st.markdown("""
+    <div class="roadmap-card">
+        <div class="roadmap-title">✅ Disponible</div>
+        <div class="roadmap-item done">13 Validateurs complets</div>
+        <div class="roadmap-item done">Correction automatique</div>
+        <div class="roadmap-item done">Validation sémantique</div>
+        <div class="roadmap-item done">Documentation complète</div>
+        <div class="roadmap-item done">Carte Livonia</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with r2:
+    st.markdown("""
+    <div class="roadmap-card">
+        <div class="roadmap-title">🚧 En cours</div>
+        <div class="roadmap-item wip">Calibration Chernarus</div>
+        <div class="roadmap-item wip">Calibration Sakhal</div>
+        <div class="roadmap-item wip">Éditeur types.xml</div>
+        <div class="roadmap-item wip">Templates prêts</div>
+        <div class="roadmap-item wip">Chatbot IA</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# ═══════════════════════════════════════════════════════
+# FOOTER
+# ═══════════════════════════════════════════════════════
+
 st.markdown("""
-<div class="hero-box">
-    <h1 class="hero-title">CODEX SUITE</h1>
-    <p class="hero-sub">La boîte à outils ultime pour DayZ</p>
-    <div>
-        <span class="pill">🔍 VALIDATION AUTO</span>
-        <span class="pill">🗺️ ÉDITEUR VISUEL</span>
-        <span class="pill">📚 DOCUMENTATION</span>
-        <span class="pill">🇫🇷 100% FRANÇAIS</span>
+<div class="footer">
+    <div class="footer-brand">CODEX SUITE v3.0</div>
+    <p class="footer-text">Créé avec ❤️ par <strong>EpSy</strong> pour la communauté DayZ francophone</p>
+    <div style="margin-top: 24px;">
+        <a href="https://discord.gg/CQR6KTJ63C" class="footer-link">💬 Discord</a>
+        <a href="https://github.com/EpSyDev/codex-validateur" class="footer-link">⭐ GitHub</a>
+        <a href="mailto:contact@exemple.com" class="footer-link">📧 Contact</a>
     </div>
 </div>
 """, unsafe_allow_html=True)
-
-st.markdown("---")
-
-# ... Le reste de ton code (modules, stats, roadmap, footer)
