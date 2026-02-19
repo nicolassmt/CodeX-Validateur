@@ -16,6 +16,13 @@ st.set_page_config(
 # ═══════════════════════════════════════════════════════
 # CSS PARTIE 1 : Imports + Font Face (via static/)
 # ═══════════════════════════════════════════════════════
+
+st.markdown("""
+<p style="font-family: 'Sawah Personal Use Only', monospace; font-size: 60px; color: white;">
+TEST SAWAH
+</p>
+""", unsafe_allow_html=True)
+
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
