@@ -24,17 +24,17 @@ def load_font_b64(path: str) -> str:
             return base64.b64encode(f.read()).decode("utf-8")
     return ""
 
-# ─── DEBUG TEMPORAIRE : affiche les chemins cherchés ──────────────────────────
-for font_file, fmt in FONT_CANDIDATES:
-    font_path = Path(__file__).parent / font_file
-    st.write(f"🔍 `{font_file}` → existe : **{font_path.exists()}** | path : `{font_path}`")
-
 # ─── Sélection du meilleur format disponible ──────────────────────────────────
 FONT_CANDIDATES = [
     ("assets/fonts/Sawah_PersonalUseOnly.woff2", "woff2"),
     ("assets/fonts/Sawah_PersonalUseOnly.woff",  "woff"),
     ("assets/fonts/Sawah_PersonalUseOnly.ttf",   "truetype"),
 ]
+
+# ─── DEBUG TEMPORAIRE : affiche les chemins cherchés ──────────────────────────
+for font_file, fmt in FONT_CANDIDATES:
+    font_path = Path(__file__).parent / font_file
+    st.write(f"🔍 `{font_file}` → existe : **{font_path.exists()}** | path : `{font_path}`")
 
 # Priorité : woff2 > woff > ttf  (choisit le premier fichier trouvé)
 FONT_CANDIDATES = [
