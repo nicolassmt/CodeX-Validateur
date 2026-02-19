@@ -1,10 +1,12 @@
 """
 Codex Suite - VERSION FINALE
-CSS découpé en 2 parties
+Police Sawah chargée en base64 depuis assets/fonts/
 Créé par EpSy
 """
 
 import streamlit as st
+import base64
+from pathlib import Path
 
 st.set_page_config(
     page_title="Codex Suite",
@@ -13,37 +15,57 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# ─── Chargement de la police Sawah en base64 ───────────────────────────────────
+def load_font_b64(path: str) -> str:
+    """Lit un fichier de police et retourne son contenu encodé en base64."""
+    font_path = Path(__file__).parent / path
+    if font_path.exists():
+        with open(font_path, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+    return ""
+
+# Priorité : woff2 > woff > ttf  (choisit le premier fichier trouvé)
+FONT_CANDIDATES = [
+    ("assets/fonts/Sawah_PersonalUseOnly.woff2", "woff2"),
+    ("assets/fonts/Sawah_PersonalUseOnly.woff",  "woff"),
+    ("assets/fonts/Sawah_PersonalUseOnly.ttf",   "truetype"),
+]
+
+font_face_block = ""
+for font_file, fmt in FONT_CANDIDATES:
+    b64 = load_font_b64(font_file)
+    if b64:
+        font_face_block = f"""
+@font-face {{
+    font-family: 'Sawah';
+    src: url('data:font/{fmt};base64,{b64}') format('{fmt}');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}}"""
+        break  # premier format trouvé suffit
+
 # ═══════════════════════════════════════════════════════
 # CSS PARTIE 1 : Imports + Font Face
 # ═══════════════════════════════════════════════════════
-
-st.markdown("""
+st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Michroma&family=Orbitron:wght@700;900&display=swap');
 
-@font-face {
-    font-family: 'Sawah';
-    src: url('https://raw.githubusercontent.com/EpSyDev/codex-validateur/main/assets/fonts/Sawah_PersonalUseOnly.woff2') format('woff2'),
-         url('https://raw.githubusercontent.com/EpSyDev/codex-validateur/main/assets/fonts/Sawah_PersonalUseOnly.woff') format('woff'),
-         url('https://raw.githubusercontent.com/EpSyDev/codex-validateur/main/assets/fonts/Sawah_PersonalUseOnly.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
+{font_face_block}
 
-* { font-family: 'Inter', sans-serif; }
-.stApp { background: #000000; }
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
+* {{ font-family: 'Inter', sans-serif; }}
+.stApp {{ background: #000000; }}
+#MainMenu {{visibility: hidden;}}
+footer {{visibility: hidden;}}
+header {{visibility: hidden;}}
 </style>
 """, unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════
 # CSS PARTIE 2 : Tous les autres styles
 # ═══════════════════════════════════════════════════════
-
 st.markdown("""
 <style>
 .galactic-header {
@@ -57,7 +79,7 @@ st.markdown("""
 
 .galactic-logo {
     font-family: 'Sawah', 'Michroma', monospace !important;
-    font-weight: 900 !important;
+    font-weight: normal !important;
     font-size: 200px !important;
     letter-spacing: 45px !important;
     color: #FFFFFF !important;
@@ -236,7 +258,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# HEADER
+# ─── HEADER ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="galactic-header">
     <h1 class="galactic-logo">CODEX</h1>
@@ -246,7 +268,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# MODULES
+# ─── MODULES ───────────────────────────────────────────────────────────────────
 st.markdown('<div class="modules-wrapper"><h2 class="section-title">🚀 Modules disponibles</h2>', unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns(3, gap="large")
@@ -304,7 +326,7 @@ with col3:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# STATS
+# ─── STATS ─────────────────────────────────────────────────────────────────────
 st.markdown('<div class="stats-section"><h2 class="section-title">📊 Codex en chiffres</h2>', unsafe_allow_html=True)
 
 s1, s2, s3, s4 = st.columns(4)
@@ -319,7 +341,7 @@ with s4:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ROADMAP
+# ─── ROADMAP ───────────────────────────────────────────────────────────────────
 st.markdown('<div class="roadmap"><h2 class="section-title">🛣️ Roadmap</h2>', unsafe_allow_html=True)
 
 r1, r2 = st.columns(2, gap="large")
@@ -349,7 +371,7 @@ with r2:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# FOOTER
+# ─── FOOTER ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="footer">
     <div class="footer-brand">CODEX SUITE v3.0</div>
