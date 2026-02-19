@@ -1,6 +1,6 @@
 """
-Codex Suite - VERSION FINALE V3
-CODEX x2 + Police Sawah depuis GitHub
+Codex Suite - VERSION ALLÉGÉE
+Utilise Google Fonts (pas d'encodage lourd)
 Créé par EpSy
 """
 
@@ -16,7 +16,7 @@ st.set_page_config(
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Michroma&family=Orbitron:wght@700;900&display=swap');
 
 * { font-family: 'Inter', sans-serif; }
 .stApp { background: #000000; }
@@ -35,8 +35,8 @@ header {visibility: hidden;}
 }
 
 .galactic-logo {
-    font-family: 'Michroma', monospace;
-    font-weight: normal;
+    font-family: 'Michroma', 'Orbitron', monospace;
+    font-weight: 900;
     font-size: 260px;
     letter-spacing: 70px;
     color: #FFFFFF;
@@ -55,18 +55,18 @@ header {visibility: hidden;}
 @keyframes logo-pulse {
     0%, 100% {
         text-shadow: 
-            0 0 20px rgba(255, 255, 255, 1),
-            0 0 40px #00D4FF,
-            0 0 70px #00D4FF,
-            0 0 100px rgba(0, 212, 255, 0.8);
+            0 0 15px rgba(255, 255, 255, 1),
+            0 0 30px #00D4FF,
+            0 0 50px #00D4FF,
+            0 0 70px rgba(0, 212, 255, 0.7);
     }
     50% {
         text-shadow: 
-            0 0 30px rgba(255, 255, 255, 1),
-            0 0 60px #00D4FF,
-            0 0 100px #00D4FF,
-            0 0 150px rgba(0, 212, 255, 1),
-            0 0 200px rgba(0, 212, 255, 0.7);
+            0 0 20px rgba(255, 255, 255, 1),
+            0 0 40px #00D4FF,
+            0 0 70px #00D4FF,
+            0 0 100px rgba(0, 212, 255, 0.9),
+            0 0 130px rgba(0, 212, 255, 0.6);
     }
 }
 
