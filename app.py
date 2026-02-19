@@ -23,12 +23,11 @@ st.markdown("""
 
 @font-face {
     font-family: 'Sawah';
-    src: url('./app/static/fonts/Sawah_PersonalUseOnly.woff2') format('woff2'),
-         url('./app/static/fonts/Sawah_PersonalUseOnly.woff') format('woff'),
-         url('./app/static/fonts/Sawah_PersonalUseOnly.ttf') format('truetype');
+    src: url('https://EpSyDev.github.io/codex-validateur/fonts/Sawah_PersonalUseOnly.woff2') format('woff2'),
+         url('https://EpSyDev.github.io/codex-validateur/fonts/Sawah_PersonalUseOnly.woff') format('woff'),
+         url('https://EpSyDev.github.io/codex-validateur/fonts/Sawah_PersonalUseOnly.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
-    font-display: swap;
 }
 
 * { font-family: 'Inter', sans-serif; }
