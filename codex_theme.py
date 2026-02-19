@@ -1,46 +1,35 @@
 """
 codex_theme.py
 Module pour charger le thème galactique CodeX dans Streamlit
+VERSION SIMPLIFIÉE - Sans image background
 """
 
 import streamlit as st
 from pathlib import Path
-import base64
 
 
 def load_css():
-    """Charge le CSS custom depuis assets/style.css avec image encodée"""
+    """Charge le CSS custom depuis assets/style.css"""
     css_file = Path(__file__).parent / "assets" / "style.css"
-    image_file = Path(__file__).parent / "assets" / "images" / "horizon-spatial.png"
     
-    if not css_file.exists():
-        st.warning(f"⚠️ Fichier CSS non trouvé : {css_file}")
-        return
-    
-    # Lire le CSS
-    with open(css_file) as f:
-        css_content = f.read()
-    
-    # Encoder l'image en base64 si elle existe
-    if image_file.exists():
-        with open(image_file, "rb") as img_file:
-            img_data = base64.b64encode(img_file.read()).decode()
-            # Remplacer le chemin de l'image par la version base64
-            css_content = css_content.replace(
-                "url('./images/horizon-spatial.png')",
-                f"url('data:image/png;base64,{img_data}')"
-            )
+    if css_file.exists():
+        with open(css_file) as f:
+            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
     else:
-        st.warning(f"⚠️ Image non trouvée : {image_file}")
-    
-    # Injecter le CSS
-    st.markdown(f'<style>{css_content}</style>', unsafe_allow_html=True)
+        st.warning(f"⚠️ Fichier CSS non trouvé : {css_file}")
 
 
 def render_header():
-    """Affiche le header galactique CodeX"""
+    """Affiche le header galactique CodeX - Version simplifiée"""
     header_html = """
-    <div class="codex-header">
+    <div style="
+        background: linear-gradient(180deg, #000000 0%, #0A1628 50%, #000000 100%);
+        padding: 80px 40px 60px 40px;
+        text-align: center;
+        border-bottom: 2px solid #00D4FF;
+        box-shadow: 0 5px 30px rgba(0, 212, 255, 0.4);
+        margin-bottom: 40px;
+    ">
         <h1 class="codex-logo">CODEX</h1>
         <p class="codex-tagline">
             Serveur de Soutien et d'Entraide<br>
