@@ -29,7 +29,7 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Michroma&family=Orbitron:wght@700;900&display=swap');
 
 @font-face {
-    font-family: 'Sawah Personal Use Only Regular';
+    font-family: 'Sawah';
     src: url('https://cdn.jsdelivr.net/gh/EpSyDev/codex-validateur@main/static/fonts/Sawah_PersonalUseOnly.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
@@ -59,7 +59,7 @@ st.markdown("""
 }
 
 .galactic-logo {
-    font-family: 'Sawah Personal Use Only Regular', monospace !important;
+    font-family: 'Sawah', monospace !important;
     font-weight: normal !important;
     font-size: 200px !important;
     letter-spacing: 45px !important;
