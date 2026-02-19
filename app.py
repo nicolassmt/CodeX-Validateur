@@ -29,7 +29,7 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Michroma&family=Orbitron:wght@700;900&display=swap');
 
 @font-face {
-    font-family: 'Sawah';
+    font-family: 'Sawah Personal Use Only Regular';
     src: url('https://cdn.jsdelivr.net/gh/EpSyDev/codex-validateur@main/static/fonts/Sawah_PersonalUseOnly.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
