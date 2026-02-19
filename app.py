@@ -42,6 +42,13 @@ header { visibility: hidden; }
 # ═══════════════════════════════════════════════════════
 # CSS PARTIE 2 : Tous les autres styles
 # ═══════════════════════════════════════════════════════
+st.write("Test font URL: ./app/static/fonts/Sawah_PersonalUseOnly.woff2")
+
+# Vérifie que le fichier est bien dans static/fonts/ (pas static/fonts dans assets/)
+from pathlib import Path
+p = Path(__file__).parent / "static" / "fonts" / "Sawah_PersonalUseOnly.woff2"
+st.write(f"Fichier static/fonts/ existe : **{p.exists()}**")
+
 st.markdown("""
 <style>
 .galactic-header {
