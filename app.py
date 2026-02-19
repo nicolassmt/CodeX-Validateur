@@ -18,7 +18,7 @@ st.set_page_config(
 # ═══════════════════════════════════════════════════════
 
 st.markdown("""
-<p style="font-family: 'Sawah Personal Use Only', monospace; font-size: 60px; color: white;">
+<p style="font-family: 'Sawah Personal Use Only Regular', monospace; font-size: 60px; color: white;">
 TEST SAWAH
 </p>
 """, unsafe_allow_html=True)
