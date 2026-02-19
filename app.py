@@ -29,6 +29,13 @@ for font_file, fmt in FONT_CANDIDATES:
     font_path = Path(__file__).parent / font_file
     st.write(f"🔍 `{font_file}` → existe : **{font_path.exists()}** | path : `{font_path}`")
 
+# ─── Sélection du meilleur format disponible ──────────────────────────────────
+FONT_CANDIDATES = [
+    ("assets/fonts/Sawah_PersonalUseOnly.woff2", "woff2"),
+    ("assets/fonts/Sawah_PersonalUseOnly.woff",  "woff"),
+    ("assets/fonts/Sawah_PersonalUseOnly.ttf",   "truetype"),
+]
+
 # Priorité : woff2 > woff > ttf  (choisit le premier fichier trouvé)
 FONT_CANDIDATES = [
     ("assets/fonts/Sawah_PersonalUseOnly.woff2", "woff2"),
