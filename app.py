@@ -409,7 +409,7 @@ with col1:
     <div class="card">
         <div class="card-icon">📝</div>
         <div class="card-title">Validateur</div>
-        <div class="card-text">Valide et corrige automatiquement tes fichiers de configuration DayZ</div>
+        <div class="card-text">Valide et corrige automatiquement tes fichiers DayZ</div>
         <div class="card-list">
             <div class="list-line">Détection erreurs</div>
             <div class="list-line">Correction automatique</div>
