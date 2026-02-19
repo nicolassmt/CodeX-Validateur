@@ -1,12 +1,10 @@
 """
 Codex Suite - VERSION FINALE
-Police Sawah chargée en base64 depuis assets/fonts/
+Police Sawah servie via dossier static/
 Créé par EpSy
 """
 
 import streamlit as st
-import base64
-from pathlib import Path
 
 st.set_page_config(
     page_title="Codex Suite",
@@ -15,63 +13,29 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ─── Chargement de la police Sawah en base64 ───────────────────────────────────
-def load_font_b64(path: str) -> str:
-    """Lit un fichier de police et retourne son contenu encodé en base64."""
-    font_path = Path(__file__).parent / path
-    if font_path.exists():
-        with open(font_path, "rb") as f:
-            return base64.b64encode(f.read()).decode("utf-8")
-    return ""
-
-# ─── Sélection du meilleur format disponible ──────────────────────────────────
-FONT_CANDIDATES = [
-    ("assets/fonts/Sawah_PersonalUseOnly.woff2", "woff2"),
-    ("assets/fonts/Sawah_PersonalUseOnly.woff",  "woff"),
-    ("assets/fonts/Sawah_PersonalUseOnly.ttf",   "truetype"),
-]
-
-# ─── DEBUG TEMPORAIRE : affiche les chemins cherchés ──────────────────────────
-for font_file, fmt in FONT_CANDIDATES:
-    font_path = Path(__file__).parent / font_file
-    st.write(f"🔍 `{font_file}` → existe : **{font_path.exists()}** | path : `{font_path}`")
-
-# Priorité : woff2 > woff > ttf  (choisit le premier fichier trouvé)
-FONT_CANDIDATES = [
-    ("assets/fonts/Sawah_PersonalUseOnly.woff2", "woff2"),
-    ("assets/fonts/Sawah_PersonalUseOnly.woff",  "woff"),
-    ("assets/fonts/Sawah_PersonalUseOnly.ttf",   "truetype"),
-]
-
-font_face_block = ""
-for font_file, fmt in FONT_CANDIDATES:
-    b64 = load_font_b64(font_file)
-    if b64:
-        font_face_block = f"""
-@font-face {{
-    font-family: 'Sawah';
-    src: url('data:font/{fmt};base64,{b64}') format('{fmt}');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}}"""
-        break  # premier format trouvé suffit
-
 # ═══════════════════════════════════════════════════════
-# CSS PARTIE 1 : Imports + Font Face
+# CSS PARTIE 1 : Imports + Font Face (via static/)
 # ═══════════════════════════════════════════════════════
-st.markdown(f"""
+st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Michroma&family=Orbitron:wght@700;900&display=swap');
 
-{font_face_block}
+@font-face {
+    font-family: 'Sawah';
+    src: url('./app/static/fonts/Sawah_PersonalUseOnly.woff2') format('woff2'),
+         url('./app/static/fonts/Sawah_PersonalUseOnly.woff') format('woff'),
+         url('./app/static/fonts/Sawah_PersonalUseOnly.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
 
-* {{ font-family: 'Inter', sans-serif; }}
-.stApp {{ background: #000000; }}
-#MainMenu {{visibility: hidden;}}
-footer {{visibility: hidden;}}
-header {{visibility: hidden;}}
+* { font-family: 'Inter', sans-serif; }
+.stApp { background: #000000; }
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
+header { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -99,7 +63,7 @@ st.markdown("""
     margin: 0 !important;
     padding: 0 !important;
     line-height: 0.9 !important;
-    text-shadow: 
+    text-shadow:
         0 0 20px rgba(255, 255, 255, 1),
         0 0 40px #00D4FF,
         0 0 70px #00D4FF,
@@ -110,14 +74,14 @@ st.markdown("""
 
 @keyframes logo-pulse {
     0%, 100% {
-        text-shadow: 
+        text-shadow:
             0 0 15px rgba(255, 255, 255, 1),
             0 0 30px #00D4FF,
             0 0 50px #00D4FF,
             0 0 70px rgba(0, 212, 255, 0.7);
     }
     50% {
-        text-shadow: 
+        text-shadow:
             0 0 20px rgba(255, 255, 255, 1),
             0 0 40px #00D4FF,
             0 0 70px #00D4FF,
@@ -256,13 +220,11 @@ st.markdown("""
     .galactic-logo { font-size: 120px !important; letter-spacing: 32px !important; }
     .galactic-tagline { font-size: 14px; letter-spacing: 6px; }
 }
-
 @media (max-width: 768px) {
     .galactic-logo { font-size: 80px !important; letter-spacing: 20px !important; }
     .galactic-tagline { font-size: 11px; letter-spacing: 4px; }
     .section-title { font-size: 32px; }
 }
-
 @media (max-width: 480px) {
     .galactic-logo { font-size: 50px !important; letter-spacing: 12px !important; }
     .galactic-tagline { font-size: 9px; letter-spacing: 3px; }
