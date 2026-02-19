@@ -37,8 +37,8 @@ header {visibility: hidden;}
 .galactic-logo {
     font-family: 'Michroma', 'Orbitron', monospace;
     font-weight: 900;
-    font-size: 150px;
-    letter-spacing: 40px;
+    font-size: 200px;
+    letter-spacing: 45px;
     color: #FFFFFF;
     text-transform: uppercase;
     margin: 0; padding: 0;
