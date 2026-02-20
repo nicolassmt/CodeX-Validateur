@@ -222,17 +222,22 @@ if uploaded_file:
 if 'validation_result' in st.session_state:
     result = st.session_state.validation_result
     
+    # Vérifier que result est valide
+    if not result:
+        st.error("❌ Erreur lors de la validation")
+        st.stop()
+    
     # ═══════════════════════════════════════════════════════
     # RÉSUMÉ
     # ═══════════════════════════════════════════════════════
     
-    if result["valid"]:
+    if result.get("valid", False):
         dayz_type = result.get("dayz_type", "Fichier DayZ")
         st.markdown(f"""
         <div class="result-box success">
             <h2 style="color: #00D4FF; margin: 0;">✅ Fichier Valide</h2>
             <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">
-                Type détecté : <strong>{dayz_type or 'Inconnu'}</strong> ({result["file_type"].upper()})
+                Type détecté : <strong>{dayz_type or 'Inconnu'}</strong> ({result.get("file_type", "unknown").upper()})
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -250,7 +255,7 @@ if 'validation_result' in st.session_state:
     # PÉDAGOGIE (si erreur avec matching)
     # ═══════════════════════════════════════════════════════
     
-    if not result["valid"] and result.get("error") and result["error"].get("matched"):
+    if not result.get("valid", False) and result.get("error") and result.get("error", {}).get("matched"):
         matched = result["error"]["matched"]
         
         st.markdown(f"""
@@ -269,18 +274,18 @@ if 'validation_result' in st.session_state:
             with col1:
                 if matched.get('example_before'):
                     st.markdown("**❌ Avant (incorrect) :**")
-                    st.code(matched['example_before'], language=result["file_type"])
+                    st.code(matched['example_before'], language=result.get("file_type", "text"))
             
             with col2:
                 if matched.get('example_after'):
                     st.markdown("**✅ Après (correct) :**")
-                    st.code(matched['example_after'], language=result["file_type"])
+                    st.code(matched['example_after'], language=result.get("file_type", "text"))
     
     # ═══════════════════════════════════════════════════════
     # LOCALISATION PRÉCISE (si disponible)
     # ═══════════════════════════════════════════════════════
     
-    if not result["valid"] and result.get("error"):
+    if not result.get("valid", False) and result.get("error"):
         error = result["error"]
         
         st.markdown("### 🎯 Localisation de l'Erreur")
@@ -310,7 +315,7 @@ if 'validation_result' in st.session_state:
         </div>
         """, unsafe_allow_html=True)
         
-        st.code(result["corrected"], language=result["file_type"])
+        st.code(result["corrected"], language=result.get("file_type", "text"))
         
         st.download_button(
             label="💾 Télécharger le fichier corrigé",
@@ -329,7 +334,7 @@ if 'validation_result' in st.session_state:
     with tab1:
         if result.get("formatted"):
             st.subheader("📄 Fichier Formaté")
-            st.code(result["formatted"], language=result["file_type"])
+            st.code(result["formatted"], language=result.get("file_type", "text"))
             
             st.download_button(
                 label="💾 Télécharger formaté",
@@ -368,8 +373,8 @@ if 'validation_result' in st.session_state:
     with tab3:
         info_data = {
             'Type de fichier': result.get('dayz_type') or 'Inconnu',
-            'Format': result["file_type"].upper(),
-            'Fichier valide': '✅ Oui' if result["valid"] else '❌ Non',
+            'Format': result.get("file_type", "unknown").upper(),
+            'Fichier valide': '✅ Oui' if result.get("valid", False) else '❌ Non',
             'Correction auto disponible': '✅ Oui' if result.get("corrected") else '❌ Non',
             'Formatage disponible': '✅ Oui' if result.get("formatted") else '❌ Non'
         }
