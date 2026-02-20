@@ -1,523 +1,251 @@
 """
-Codex Suite - Module Validateur XML/JSON
-Outil pédagogique de validation et correction
+Codex Suite - Module Validateur
+Validation automatique de tous les fichiers DayZ
 """
 
 import streamlit as st
 import sys
 from pathlib import Path
 
-# Ajouter le dossier modules au path Python
-sys.path.insert(0, str(Path(__file__).parent.parent / "modules"))
+# Ajouter le dossier parent au path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from modules.validator import validate
-from modules.locator import locate_real_error
-from modules.corrector import suggest_manual_fixes
+from modules.validator import validator
 
-# ==============================
+# ═══════════════════════════════════════════════════════
 # CONFIG PAGE
-# ==============================
+# ═══════════════════════════════════════════════════════
+
 st.set_page_config(
     page_title="Codex - Validateur",
     page_icon="📝",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# ==============================
-# CSS
-# ==============================
+# ═══════════════════════════════════════════════════════
+# CSS UNIFIÉ
+# ═══════════════════════════════════════════════════════
+
 st.markdown("""
 <style>
-* { font-family: Inter, sans-serif; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
 
-.block {
-    padding: 20px;
-    border-radius: 14px;
-    margin-bottom: 20px;
+* { font-family: 'Inter', sans-serif; }
+.stApp { background: #000000; }
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
+header { visibility: hidden; }
+
+.header-container {
+    width: 100%;
+    margin: 0 0 40px 0;
+    padding: 0;
+}
+.header-container img {
+    width: 100%;
+    height: auto;
+    display: block;
 }
 
-.identification { 
-    background: linear-gradient(135deg, #667eea, #764ba2); 
-    color: white; 
+.content-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 30px;
 }
 
-.localisation { 
-    background: linear-gradient(135deg, #f6d365, #fda085); 
-    color: #7c2d12;
+.page-title {
+    text-align: center;
+    font-size: 38px;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin-bottom: 40px;
+    text-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
 }
 
-.description { 
-    background: linear-gradient(135deg, #fa709a, #fee140); 
-    color: #7f1d1d;
+.info-box {
+    background: linear-gradient(135deg, rgba(0, 25, 50, 0.65) 0%, rgba(0, 15, 30, 0.75) 100%);
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 30px;
 }
 
-.solution { 
-    background: linear-gradient(135deg, #84fab0, #8fd3f4); 
-    color: #065f46;
+.info-box h3 {
+    color: #00D4FF;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
 }
 
-.success-block {
-    background: linear-gradient(135deg, #a8edea, #fed6e3);
-    padding: 20px;
-    border-radius: 14px;
-    margin: 20px 0;
+.info-box p {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
 }
 
-.semantic-warnings {
-    background: linear-gradient(135deg, #fef3c7, #fbbf24);
-    padding: 20px;
-    border-radius: 14px;
-    margin: 20px 0;
-    border: 2px solid #f59e0b;
+.result-box {
+    background: rgba(0, 25, 50, 0.55);
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 20px;
 }
 
-.warning-item {
-    background: white;
-    padding: 10px;
-    border-radius: 8px;
-    margin: 10px 0;
-    border-left: 4px solid #f59e0b;
+.result-box.success {
+    border-color: rgba(0, 212, 255, 0.6);
+    background: rgba(0, 50, 75, 0.4);
+}
+
+.result-box.error {
+    border-color: rgba(239, 68, 68, 0.6);
+    background: rgba(75, 0, 0, 0.4);
 }
 
 .error-item {
-    background: white;
-    padding: 10px;
-    border-radius: 8px;
-    margin: 10px 0;
-    border-left: 4px solid #dc2626;
+    background: rgba(239, 68, 68, 0.1);
+    border-left: 3px solid #ef4444;
+    padding: 12px 16px;
+    margin: 8px 0;
+    border-radius: 4px;
 }
 
-.dayz-badge {
-    display: inline-block;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-weight: bold;
-    font-size: 0.9em;
-    margin-left: 10px;
+.warning-item {
+    background: rgba(251, 191, 36, 0.1);
+    border-left: 3px solid #fbbf24;
+    padding: 12px 16px;
+    margin: 8px 0;
+    border-radius: 4px;
 }
 
-textarea[disabled] {
-    background: #f9fafb !important;
-    border: 2px solid #d1d5db !important;
-    border-radius: 10px !important;
-    font-family: 'Courier New', monospace !important;
-    font-size: 13px !important;
-    color: #1f2937 !important;
-    line-height: 1.5 !important;
-}
-
-.correction-result {
-    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-    padding: 20px;
+.stButton > button {
+    width: 100%;
+    background: linear-gradient(135deg, #00D4FF 0%, #0EA5E9 100%);
+    color: #000000;
+    border: none;
     border-radius: 14px;
-    margin: 20px 0;
-    border: 2px solid #10b981;
+    padding: 16px 32px;
+    font-size: 15px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 18px rgba(0, 212, 255, 0.3);
+}
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ==============================
-# SESSION STATE
-# ==============================
-defaults = {
-    "content": "",
-    "filename": "",
-    "filetype": None,
-    "validation_result": None
-}
+# ═══════════════════════════════════════════════════════
+# HEADER IMAGE
+# ═══════════════════════════════════════════════════════
 
-for k, v in defaults.items():
-    if k not in st.session_state:
-        st.session_state[k] = v
+st.markdown("""
+<div class="header-container">
+    <img src="https://raw.githubusercontent.com/EpSyDev/codex-validateur/main/assets/images/codex_header.png" alt="CODEX">
+</div>
+""", unsafe_allow_html=True)
 
-# ==============================
-# HEADER
-# ==============================
-try:
-    st.image("images/codex3-V2.png", use_column_width=True)
-except:
-    pass
+# ═══════════════════════════════════════════════════════
+# CONTENU PRINCIPAL
+# ═══════════════════════════════════════════════════════
 
-st.title("📝 Validateur XML / JSON")
-st.subheader("Comprendre, corriger et fiabiliser tes fichiers DayZ")
+st.markdown('<div class="content-wrapper">', unsafe_allow_html=True)
+st.markdown('<h1 class="page-title">📝 Validateur de Fichiers DayZ</h1>', unsafe_allow_html=True)
 
-# Bouton retour accueil
-if st.button("⬅️ Retour à l'accueil"):
-    st.switch_page("app.py")
+# Info box
+st.markdown("""
+<div class="info-box">
+    <h3>🎯 Validation Automatique</h3>
+    <p>Uploadez n'importe quel fichier de configuration DayZ (XML ou JSON). Le système détecte automatiquement le type de fichier et applique les règles de validation appropriées.</p>
+</div>
+""", unsafe_allow_html=True)
 
-# Sélecteur de niveau utilisateur
-col_level_1, col_level_2, col_level_3 = st.columns([1, 1, 2])
-with col_level_1:
-    user_level = st.radio(
-        "Ton niveau :",
-        ["novice", "modder"],
-        index=0 if st.session_state.get("user_level", "novice") == "novice" else 1,
-        horizontal=True
-    )
-    st.session_state.user_level = user_level
-
-st.markdown("---")
-
-# ==============================
-# UPLOAD
-# ==============================
-uploaded = st.file_uploader(
-    "📤 Dépose ton fichier XML ou JSON",
-    type=["xml", "json"],
-    help="Fichiers DayZ acceptés : types.xml, events.xml, economy.xml, globals.xml, messages.xml, etc."
+# Upload de fichier
+uploaded_file = st.file_uploader(
+    "Choisissez un fichier",
+    type=['xml', 'json'],
+    help="Formats supportés : XML (types, events, globals...) et JSON (cfggameplay, cfgeffectarea...)"
 )
 
-if uploaded:
-    st.session_state.content = uploaded.read().decode("utf-8")
-    st.session_state.filename = uploaded.name
-    st.session_state.filetype = uploaded.name.split(".")[-1].lower()
-    st.session_state.validation_result = None
-
-# ==============================
-# ZONE DE TEXTE
-# ==============================
-if not uploaded:
-    st.markdown("### ✏️ Ou colle ton code directement ici")
+if uploaded_file:
+    # Lire le contenu
+    content = uploaded_file.read().decode('utf-8')
+    filename = uploaded_file.name
     
-    col_type_1, col_type_2 = st.columns(2)
-    with col_type_1:
-        manual_type = st.selectbox(
-            "Type de fichier",
-            ["xml", "json"],
-            help="Sélectionne le type de ton code"
-        )
-    
-    content_input = st.text_area(
-        "Code",
-        value=st.session_state.content,
-        height=300,
-        placeholder="Colle ton code XML ou JSON ici..."
-    )
-    
-    if content_input != st.session_state.content:
-        st.session_state.content = content_input
-        st.session_state.filetype = manual_type
-        st.session_state.filename = f"code_colle.{manual_type}"
-        st.session_state.validation_result = None
-
-st.markdown("---")
-
-# ==============================
-# BOUTONS D'ACTION
-# ==============================
-if st.session_state.content:
-    st.markdown("### 🎯 Actions disponibles")
-    
-    col_btn_1, col_btn_2, col_btn_3 = st.columns(3)
-    
-    with col_btn_1:
-        if st.button("🔍 Valider", use_container_width=True, type="primary"):
-            with st.spinner("Validation en cours..."):
-                result = validate(st.session_state.content, st.session_state.filetype)
-                st.session_state.validation_result = result
-    
-    with col_btn_2:
-        if st.button("🗑️ Réinitialiser", use_container_width=True):
-            for key in defaults.keys():
-                st.session_state[key] = defaults[key]
-            st.rerun()
-    
-    with col_btn_3:
-        download_enabled = False
-        download_content = st.session_state.content
-        download_filename = st.session_state.filename
-        
-        if st.session_state.validation_result:
-            result = st.session_state.validation_result
+    # Bouton de validation
+    if st.button("🚀 Valider le fichier", type="primary"):
+        with st.spinner("Analyse en cours..."):
+            # Validation
+            result = validator.validate(content, filename)
             
-            if result["valid"]:
-                download_enabled = True
-                download_content = result["formatted"]
-            elif result.get("corrected"):
-                download_enabled = True
-                download_content = result["corrected"]
-                name_parts = st.session_state.filename.rsplit(".", 1)
-                if len(name_parts) == 2:
-                    download_filename = f"{name_parts[0]}_corrige.{name_parts[1]}"
-                else:
-                    download_filename = f"{st.session_state.filename}_corrige"
-        
-        if download_enabled:
-            st.download_button(
-                "💾 Télécharger",
-                data=download_content,
-                file_name=download_filename,
-                mime="text/plain",
-                use_container_width=True
-            )
-        else:
-            st.button("💾 Télécharger", use_container_width=True, disabled=True, help="Valide d'abord ton fichier")
+            # Stocker dans session state
+            st.session_state.validation_result = result
 
-st.markdown("---")
-
-# ==============================
-# AFFICHAGE DES RÉSULTATS
-# ==============================
-if st.session_state.validation_result:
+# Afficher les résultats
+if 'validation_result' in st.session_state:
     result = st.session_state.validation_result
     
-    if result.get("dayz_type"):
-        dayz_type_names = {
-            "types": "types.xml (Items & Loot)",
-            "events": "events.xml (Événements dynamiques)",
-            "economy": "economy.xml (Économie globale)",
-            "globals": "globals.xml (Variables serveur)",
-            "messages": "messages.xml (Messages automatiques)"
-        }
-        dayz_display = dayz_type_names.get(result["dayz_type"], result["dayz_type"])
-        
+    # Résumé
+    if result.valid:
         st.markdown(f"""
-        <div style="text-align: center; margin: 20px 0;">
-            <span class="dayz-badge">📄 Fichier détecté : {dayz_display}</span>
+        <div class="result-box success">
+            <h2 style="color: #00D4FF; margin: 0;">✅ Fichier Valide</h2>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">
+                Type détecté : <strong>{result.file_type}</strong> ({result.format.upper()})
+                <br>Confiance : {result.confidence:.0%}
+            </p>
         </div>
         """, unsafe_allow_html=True)
-    
-    # CAS 1 : FICHIER VALIDE
-    if result["valid"]:
-        st.markdown("""
-        <div class="success-block">
-            <h3>✅ Nickel ! Ton fichier est parfait syntaxiquement !</h3>
-            <p>Aucune erreur de syntaxe détectée. Le fichier est prêt pour DayZ.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        if result.get("semantic_warnings") and len(result["semantic_warnings"]) > 0:
-            warnings = result["semantic_warnings"]
-            errors_count = sum(1 for w in warnings if w["severity"] == "error")
-            warnings_count = sum(1 for w in warnings if w["severity"] == "warning")
-            
-            st.markdown(f"""
-            <div class="semantic-warnings">
-                <h3>⚠️ Validation sémantique : {errors_count} erreur(s), {warnings_count} avertissement(s)</h3>
-                <p>La syntaxe est correcte, mais certaines <strong>règles métier DayZ</strong> ne sont pas respectées :</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            for warning in warnings:
-                severity_icon = "🔴" if warning["severity"] == "error" else "⚠️"
-                severity_class = "error-item" if warning["severity"] == "error" else "warning-item"
-                severity_label = "ERREUR MÉTIER" if warning["severity"] == "error" else "AVERTISSEMENT"
-                
-                st.markdown(f"""
-                <div class="{severity_class}">
-                    <p><strong>{severity_icon} {severity_label}</strong></p>
-                    <p>{warning["message"]}</p>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            st.markdown("---")
-            
-            if errors_count > 0:
-                st.warning("⚠️ **Action recommandée :** Corrige les erreurs métier ci-dessus avant d'utiliser ce fichier sur ton serveur.")
-            else:
-                st.info("💡 **Info :** Les avertissements ci-dessus sont des suggestions d'amélioration.")
-        
-        st.markdown("#### 🎨 Code formaté")
-        st.code(result["formatted"], language=result["file_type"], line_numbers=True)
-    
-    # CAS 2 : FICHIER AVEC ERREUR
     else:
-        error = result["error"]
-        matched = error["matched"]
-        
-        if matched:
-            if st.session_state.user_level == "novice":
-                message_user = matched["message_novice"]
-            else:
-                message_user = matched["message_modder"]
-        else:
-            message_user = error["message_brut"]
-        
-        reported_line = error["line"]
-        real_line = reported_line
-        confidence = None
-        reason = None
-        
-        if result["file_type"] == "xml":
-            location = locate_real_error(st.session_state.content, reported_line)
-            real_line = location["real_line"]
-            confidence = location["confidence"]
-            reason = location["reason"]
-        
-        if result.get("corrected"):
-            st.markdown("""
-            <div class="correction-result">
-                <h3>✅ Correction automatique disponible !</h3>
-                <p>L'erreur a été corrigée automatiquement. Compare l'extrait ci-dessous et télécharge le fichier complet.</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown("### 🔄 Comparaison avant / après (extrait autour de l'erreur)")
-            
-            lines_before = st.session_state.content.splitlines()
-            lines_after = result["corrected"].splitlines()
-            
-            start_line = max(1, real_line - 5)
-            end_line = min(len(lines_before), real_line + 5)
-            
-            col_comp_1, col_comp_2 = st.columns(2)
-            
-            with col_comp_1:
-                st.markdown("**❌ Avant**")
-                before_extract = []
-                for i in range(start_line, end_line + 1):
-                    if i <= len(lines_before):
-                        line_content = lines_before[i - 1]
-                        if i == real_line:
-                            before_extract.append(f"🔴 {line_content}")
-                        else:
-                            before_extract.append(f"   {line_content}")
-                
-                st.code("\n".join(before_extract), language=result["file_type"], line_numbers=True)
-            
-            with col_comp_2:
-                st.markdown("**✅ Après**")
-                after_extract = []
-                for i in range(start_line, end_line + 1):
-                    if i <= len(lines_after):
-                        line_content = lines_after[i - 1]
-                        if i == real_line:
-                            after_extract.append(f"✅ {line_content}")
-                        else:
-                            after_extract.append(f"   {line_content}")
-                
-                st.code("\n".join(after_extract), language=result["file_type"], line_numbers=True)
-            
-            st.markdown("---")
-        
-        if result["file_type"] == "xml" and real_line != reported_line:
-            st.markdown(f"""
-            <div class="block localisation">
-                <h4>📍 Localisation de l'erreur</h4>
-                <p><b>🎯 Ligne probable :</b> {real_line} (confiance : {confidence})</p>
-                <p><b>Colonne :</b> {error["column"]}</p>
-                <p><b>💡 Explication :</b> {reason}</p>
-                <p style="font-size: 0.9em; margin-top: 10px;">
-                    <em>Note : Le parseur indiquait ligne {reported_line}, mais l'analyse a identifié la cause réelle plus haut.</em>
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown(f"""
-            <div class="block localisation">
-                <h4>📍 Localisation de l'erreur</h4>
-                <p><b>Ligne :</b> {real_line}</p>
-                <p><b>Colonne :</b> {error["column"]}</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("#### 📝 Extrait autour de l'erreur")
-        
-        lines = st.session_state.content.splitlines()
-        start_line = max(1, real_line - 3)
-        end_line = min(len(lines), real_line + 3)
-        
-        extract_lines = []
-        for i in range(start_line, end_line + 1):
-            line_content = lines[i - 1] if i <= len(lines) else ""
-            if i == real_line:
-                extract_lines.append(f"🔴 LIGNE {i} → {line_content}")
-            else:
-                extract_lines.append(f"   LIGNE {i}   {line_content}")
-        
-        extract_code = "\n".join(extract_lines)
-        st.code(extract_code, language=result["file_type"])
-        
-        tag_name = matched.get("tag_name") if matched else None
-
-        identification_html = f"""
-        <div class="block identification">
-            <h4>🧩 Identification</h4>
-            <p><b>Type de fichier :</b> {result["file_type"].upper()}</p>
-            <p><b>Erreur détectée :</b> {matched["titre"] if matched else "Erreur de syntaxe"}</p>
-        """
-
-        if tag_name:
-            identification_html += f'<p><b>🏷️ Balise concernée :</b> <code>&lt;{tag_name}&gt;</code></p>'
-
-        identification_html += "</div>"
-
-        st.markdown(identification_html, unsafe_allow_html=True)
-        
         st.markdown(f"""
-        <div class="block description">
-            <h4>🧠 Description de l'erreur</h4>
-            <p>{message_user}</p>
+        <div class="result-box error">
+            <h2 style="color: #ef4444; margin: 0;">❌ Erreurs Détectées</h2>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">
+                {len(result.errors)} erreur(s) trouvée(s)
+            </p>
         </div>
         """, unsafe_allow_html=True)
-        
-        if matched:
-            if result.get("corrected"):
-                st.markdown("""
-                <div class="block solution">
-                    <h4>💡 Solution</h4>
-                    <p>✅ <strong>Cette erreur a été corrigée automatiquement !</strong></p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown("**👉 Action immédiate :**")
-                st.markdown("""
-                1. Vérifie la comparaison avant/après ci-dessus
-                2. Télécharge le fichier complet corrigé avec **"💾 Télécharger"**
-                3. Utilise le fichier téléchargé dans DayZ
-                """)
-            else:
-                suggestions = suggest_manual_fixes(
-                    st.session_state.content,
-                    result["file_type"],
-                    matched
-                )
-                
-                st.markdown("""
-                <div class="block solution">
-                    <h4>💡 Solution</h4>
-                    <p>⚠️ <strong>Cette erreur nécessite une correction manuelle.</strong></p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown("**👉 Étapes à suivre :**")
-                manual_steps = "\n".join([f"{i+1}. {step}" for i, step in enumerate(suggestions["manual_steps"])])
+    
+    # Onglets pour détails
+    tab1, tab2, tab3 = st.tabs(["❌ Erreurs", "⚠️ Avertissements", "ℹ️ Informations"])
+    
+    with tab1:
+        if result.errors:
+            for idx, error in enumerate(result.errors, 1):
                 st.markdown(f"""
-                {manual_steps}
-                {len(suggestions["manual_steps"]) + 1}. Modifie ton fichier selon ces indications
-                {len(suggestions["manual_steps"]) + 2}. Re-charge le fichier corrigé dans l'outil
-                {len(suggestions["manual_steps"]) + 3}. Clique sur **"🔍 Valider"** pour vérifier
-                """)
-        
-        st.markdown("#### 📄 Code complet analysé")
-        
-        highlighted_lines = []
-        for i, line in enumerate(lines, start=1):
-            if i == real_line:
-                highlighted_lines.append(f"🔴 → {line}")
-            else:
-                highlighted_lines.append(f"     {line}")
-        
-        highlighted_code = "\n".join(highlighted_lines)
-        
-        st.text_area(
-            "Code complet",
-            value=highlighted_code,
-            height=600,
-            disabled=True,
-            label_visibility="collapsed"
-        )
-        
-        if matched and matched.get("exemple_avant"):
-            with st.expander("💡 Voir un exemple de correction similaire"):
-                col_ex_1, col_ex_2 = st.columns(2)
-                
-                with col_ex_1:
-                    st.markdown("**❌ Avant (incorrect)**")
-                    st.code(matched["exemple_avant"], language=result["file_type"])
-                
-                with col_ex_2:
-                    st.markdown("**✅ Après (correct)**")
-                    st.code(matched["exemple_après"], language=result["file_type"])
+                <div class="error-item">
+                    <strong>Erreur #{idx}</strong><br>
+                    {error.get('message', 'Erreur inconnue')}<br>
+                    <small style="color: rgba(255,255,255,0.6);">{error.get('suggestion', '')}</small>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.success("Aucune erreur détectée ! ✅")
+    
+    with tab2:
+        if result.warnings:
+            for idx, warning in enumerate(result.warnings, 1):
+                st.markdown(f"""
+                <div class="warning-item">
+                    <strong>Avertissement #{idx}</strong><br>
+                    {warning.get('message', 'Avertissement inconnu')}<br>
+                    <small style="color: rgba(255,255,255,0.6);">{warning.get('suggestion', '')}</small>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.info("Aucun avertissement.")
+    
+    with tab3:
+        st.json({
+            'Type de fichier': result.file_type,
+            'Format': result.format,
+            'Confiance': f"{result.confidence:.0%}",
+            'Nombre d\'erreurs': len(result.errors),
+            'Nombre d\'avertissements': len(result.warnings),
+            'Validateur': result.metadata.get('validator', 'N/A')
+        })
+
+st.markdown('</div>', unsafe_allow_html=True)
