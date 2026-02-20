@@ -1,6 +1,6 @@
 """
-Codex Suite - Module Validateur ULTIME
-Validation automatique + Pédagogie + Auto-correction
+Codex Suite - Module Validateur FINAL
+Validation XML/JSON avec pédagogie et auto-correction
 """
 
 import streamlit as st
@@ -10,7 +10,8 @@ from pathlib import Path
 # Ajouter le dossier parent au path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from modules.validator import validator
+# Import de l'ancien système qui fonctionne
+from modules.validator import validate
 
 # ═══════════════════════════════════════════════════════
 # CONFIG PAGE
@@ -129,6 +130,7 @@ header { visibility: hidden; }
     padding: 12px 16px;
     margin: 8px 0;
     border-radius: 4px;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .warning-item {
@@ -137,6 +139,7 @@ header { visibility: hidden; }
     padding: 12px 16px;
     margin: 8px 0;
     border-radius: 4px;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .correction-box {
@@ -187,7 +190,7 @@ st.markdown('<h1 class="page-title">📝 Validateur de Fichiers DayZ</h1>', unsa
 st.markdown("""
 <div class="info-box">
     <h3>🎯 Validation Intelligente</h3>
-    <p>Uploadez n'importe quel fichier de configuration DayZ (XML ou JSON). Le système détecte automatiquement le type, valide la syntaxe ET les règles métier, localise les erreurs avec précision et propose des corrections automatiques.</p>
+    <p>Uploadez n'importe quel fichier de configuration DayZ (XML ou JSON). Le système détecte le type, localise précisément les erreurs et propose des corrections automatiques avec messages pédagogiques en français.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -195,7 +198,7 @@ st.markdown("""
 uploaded_file = st.file_uploader(
     "Choisissez un fichier",
     type=['xml', 'json'],
-    help="17+ types supportés : types.xml, events.xml, cfggameplay.json, etc."
+    help="Types supportés : types.xml, events.xml, globals.xml, cfggameplay.json, etc."
 )
 
 if uploaded_file:
@@ -203,11 +206,14 @@ if uploaded_file:
     content = uploaded_file.read().decode('utf-8')
     filename = uploaded_file.name
     
+    # Déterminer le type de fichier
+    file_type = "json" if filename.lower().endswith('.json') else "xml"
+    
     # Bouton de validation
     if st.button("🚀 Valider le fichier", type="primary"):
         with st.spinner("Analyse en cours..."):
-            # Validation avec le système ULTIME fusionné
-            result = validator.validate(content, filename)
+            # Validation avec l'ancien système qui fonctionne
+            result = validate(content, file_type)
             
             # Stocker dans session state
             st.session_state.validation_result = result
@@ -220,13 +226,13 @@ if 'validation_result' in st.session_state:
     # RÉSUMÉ
     # ═══════════════════════════════════════════════════════
     
-    if result.valid:
+    if result["valid"]:
+        dayz_type = result.get("dayz_type", "Fichier DayZ")
         st.markdown(f"""
         <div class="result-box success">
             <h2 style="color: #00D4FF; margin: 0;">✅ Fichier Valide</h2>
             <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">
-                Type détecté : <strong>{result.file_type or 'Inconnu'}</strong> ({result.format.upper()})
-                <br>Confiance : {result.confidence:.0%}
+                Type détecté : <strong>{dayz_type or 'Inconnu'}</strong> ({result["file_type"].upper()})
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -235,62 +241,80 @@ if 'validation_result' in st.session_state:
         <div class="result-box error">
             <h2 style="color: #ef4444; margin: 0;">❌ Erreurs Détectées</h2>
             <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">
-                {len(result.errors)} erreur(s) trouvée(s)
+                Erreur de syntaxe trouvée
             </p>
         </div>
         """, unsafe_allow_html=True)
     
     # ═══════════════════════════════════════════════════════
-    # PÉDAGOGIE (si erreur de syntaxe)
+    # PÉDAGOGIE (si erreur avec matching)
     # ═══════════════════════════════════════════════════════
     
-    if not result.valid and result.pedagogy:
-        pedagogy = result.pedagogy
+    if not result["valid"] and result.get("error") and result["error"].get("matched"):
+        matched = result["error"]["matched"]
         
         st.markdown(f"""
         <div class="pedagogy-box">
-            <h4>💡 {pedagogy.get('title', 'Explication')}</h4>
-            <p><strong>Problème :</strong> {pedagogy.get('message_novice', '')}</p>
-            <p><strong>Solution :</strong> {pedagogy.get('solution', '')}</p>
+            <h4>💡 {matched.get('title', 'Explication')}</h4>
+            <p><strong>Pour les débutants :</strong><br>{matched.get('message_novice', '')}</p>
+            <p><strong>Pour les moddeurs :</strong><br>{matched.get('message_modder', '')}</p>
+            <p><strong>Solution :</strong><br>{matched.get('solution', '')}</p>
         </div>
         """, unsafe_allow_html=True)
         
         # Exemples avant/après
-        if pedagogy.get('example_before') or pedagogy.get('example_after'):
+        if matched.get('example_before') or matched.get('example_after'):
             col1, col2 = st.columns(2)
             
             with col1:
-                if pedagogy.get('example_before'):
+                if matched.get('example_before'):
                     st.markdown("**❌ Avant (incorrect) :**")
-                    st.code(pedagogy['example_before'], language=result.format)
+                    st.code(matched['example_before'], language=result["file_type"])
             
             with col2:
-                if pedagogy.get('example_after'):
+                if matched.get('example_after'):
                     st.markdown("**✅ Après (correct) :**")
-                    st.code(pedagogy['example_after'], language=result.format)
+                    st.code(matched['example_after'], language=result["file_type"])
+    
+    # ═══════════════════════════════════════════════════════
+    # LOCALISATION PRÉCISE (si disponible)
+    # ═══════════════════════════════════════════════════════
+    
+    if not result["valid"] and result.get("error"):
+        error = result["error"]
+        
+        st.markdown("### 🎯 Localisation de l'Erreur")
+        
+        # Ligne reportée par le parseur
+        reported_line = error.get("line", "?")
+        
+        st.markdown(f"""
+        <div class="error-item">
+            <strong>Ligne signalée par le parseur :</strong> {reported_line}<br>
+            <strong>Colonne :</strong> {error.get("column", "?")}<br>
+            <strong>Message brut :</strong> {error.get("message_brut", "Erreur inconnue")}
+        </div>
+        """, unsafe_allow_html=True)
     
     # ═══════════════════════════════════════════════════════
     # CORRECTION AUTOMATIQUE
     # ═══════════════════════════════════════════════════════
     
-    if result.corrected_content:
+    if result.get("corrected"):
         st.markdown("""
         <div class="correction-box">
             <h3 style="color: #22c55e; margin: 0 0 12px 0;">✨ Correction Automatique Disponible</h3>
             <p style="color: rgba(255,255,255,0.9); margin: 0;">
-                Les corrections suivantes ont été appliquées :
+                Le fichier a été corrigé automatiquement !
             </p>
         </div>
         """, unsafe_allow_html=True)
         
-        for correction in result.applied_corrections:
-            st.success(f"✓ {correction}")
-        
-        st.code(result.corrected_content, language=result.format)
+        st.code(result["corrected"], language=result["file_type"])
         
         st.download_button(
             label="💾 Télécharger le fichier corrigé",
-            data=result.corrected_content,
+            data=result["corrected"],
             file_name=f"corrigé_{uploaded_file.name}",
             mime="text/plain",
             type="primary"
@@ -300,71 +324,59 @@ if 'validation_result' in st.session_state:
     # ONGLETS DÉTAILS
     # ═══════════════════════════════════════════════════════
     
-    tab1, tab2, tab3, tab4 = st.tabs(["❌ Erreurs", "⚠️ Avertissements", "📄 Formaté", "ℹ️ Informations"])
+    tab1, tab2, tab3 = st.tabs(["📄 Formaté", "⚠️ Avertissements Sémantiques", "ℹ️ Informations"])
     
     with tab1:
-        if result.errors:
-            for idx, error in enumerate(result.errors, 1):
-                line = error.get('line', '?')
-                message = error.get('message', 'Erreur inconnue')
-                
-                # Localisation précise si disponible
-                if result.real_error_line:
-                    real_line = result.real_error_line.get('real_line', line)
-                    reason = result.real_error_line.get('reason', '')
-                    if real_line != line:
-                        st.info(f"🎯 **Localisation précise :** {reason}")
-                        line = real_line
-                
-                st.markdown(f"""
-                <div class="error-item">
-                    <strong>Erreur #{idx} - Ligne {line}</strong><br>
-                    {message}
-                </div>
-                """, unsafe_allow_html=True)
-        else:
-            st.success("Aucune erreur de syntaxe détectée ! ✅")
-    
-    with tab2:
-        if result.warnings:
-            for idx, warning in enumerate(result.warnings, 1):
-                line = warning.get('line', '?')
-                message = warning.get('message', 'Avertissement inconnu')
-                suggestion = warning.get('suggestion', '')
-                
-                st.markdown(f"""
-                <div class="warning-item">
-                    <strong>Avertissement #{idx}</strong> {f'- Ligne {line}' if line != '?' else ''}<br>
-                    {message}<br>
-                    <small style="color: rgba(255,255,255,0.6);">{suggestion}</small>
-                </div>
-                """, unsafe_allow_html=True)
-        else:
-            st.info("Aucun avertissement.")
-    
-    with tab3:
-        if result.formatted_content:
+        if result.get("formatted"):
             st.subheader("📄 Fichier Formaté")
-            st.code(result.formatted_content, language=result.format)
+            st.code(result["formatted"], language=result["file_type"])
             
             st.download_button(
                 label="💾 Télécharger formaté",
-                data=result.formatted_content,
+                data=result["formatted"],
                 file_name=f"formaté_{uploaded_file.name}",
                 mime="text/plain"
             )
         else:
-            st.info("Formatage non disponible pour ce fichier.")
+            st.info("Formatage non disponible (erreur de syntaxe).")
     
-    with tab4:
-        st.json({
-            'Type de fichier': result.file_type or 'Inconnu',
-            'Format': result.format,
-            'Confiance de détection': f"{result.confidence:.0%}",
-            'Nombre d\'erreurs': len(result.errors),
-            'Nombre d\'avertissements': len(result.warnings),
-            'Validateur utilisé': result.metadata.get('validator', 'Détection seule'),
-            'Correction auto disponible': result.corrected_content is not None
-        })
+    with tab2:
+        if result.get("semantic_warnings"):
+            st.markdown("### ⚠️ Avertissements Sémantiques")
+            for warning in result["semantic_warnings"]:
+                severity = warning.get("severity", "warning")
+                message = warning.get("message", "")
+                line = warning.get("line", 0)
+                
+                if severity == "error":
+                    st.markdown(f"""
+                    <div class="error-item">
+                        <strong>Ligne {line}</strong><br>
+                        {message}
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.markdown(f"""
+                    <div class="warning-item">
+                        <strong>Ligne {line}</strong><br>
+                        {message}
+                    </div>
+                    """, unsafe_allow_html=True)
+        else:
+            st.info("Aucun avertissement sémantique.")
+    
+    with tab3:
+        info_data = {
+            'Type de fichier': result.get('dayz_type') or 'Inconnu',
+            'Format': result["file_type"].upper(),
+            'Fichier valide': '✅ Oui' if result["valid"] else '❌ Non',
+            'Correction auto disponible': '✅ Oui' if result.get("corrected") else '❌ Non',
+            'Formatage disponible': '✅ Oui' if result.get("formatted") else '❌ Non'
+        }
+        
+        if result.get("semantic_warnings"):
+            info_data['Avertissements sémantiques'] = len(result["semantic_warnings"])
+        
+        st.json(info_data)
 
 st.markdown('</div>', unsafe_allow_html=True)
