@@ -240,7 +240,7 @@ st.markdown("""
 # ─── HEADER ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="galactic-header">
-    <h1 style="font-family: 'Sawah Personal Use Only Regular', monospace; font-size: 200px; letter-spacing: 45px; color: #FFFFFF; text-transform: uppercase; margin: 0; padding: 0; line-height: 0.9; text-shadow: 0 0 20px rgba(255, 255, 255, 1), 0 0 40px #00D4FF, 0 0 70px #00D4FF, 0 0 100px rgba(0, 212, 255, 0.8), 0 0 130px rgba(0, 212, 255, 0.6);">CODEX</h1>
+    <h1 class="galactic-logo">CODEX</h1>
     <p class="galactic-tagline">
         Serveur de Soutien et d'Entraide à la Communauté DayZ Francophone
     </p>
