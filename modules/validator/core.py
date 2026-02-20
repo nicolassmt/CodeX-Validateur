@@ -318,6 +318,10 @@ class DayZValidator:
                 from .validators.xml_validators.spawnable_types_validator import SpawnableTypesValidator
                 return SpawnableTypesValidator(version=self.version)
             
+            elif file_type == 'cfgspawnabletypes':
+                from .validators.xml_validators.cfgspawnabletypes_validator import CfgSpawnableTypesValidator
+                return CfgSpawnableTypesValidator(version=self.version)
+            
             elif file_type == 'zombie_territories':
                 from .validators.xml_validators.zombie_territories_validator import ZombieTerritoriesValidator
                 return ZombieTerritoriesValidator(version=self.version)
