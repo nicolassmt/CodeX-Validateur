@@ -1,10 +1,11 @@
 """
 Codex Suite - VERSION FINALE
-Sawah en inline style (la seule méthode qui marche!)
+Header image custom + design unifié
 Créé par EpSy
 """
 
 import streamlit as st
+from pathlib import Path
 
 st.set_page_config(
     page_title="Codex Suite",
@@ -13,19 +14,11 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# CSS BASE
+# CSS UNIFIÉ
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Michroma&family=Orbitron:wght@700;900&display=swap');
-
-@font-face {
-    font-family: 'Sawah Personal Use Only Regular';
-    src: url('https://cdn.jsdelivr.net/gh/EpSyDev/codex-validateur@main/static/fonts/Sawah_PersonalUseOnly.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
+@import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
 
 * { font-family: 'Inter', sans-serif; }
 .stApp { background: #000000; }
@@ -33,29 +26,30 @@ st.markdown("""
 footer { visibility: hidden; }
 header { visibility: hidden; }
 
-.galactic-header {
-    background: linear-gradient(180deg, #000000 0%, #0A1628 50%, #000000 100%);
-    padding: 90px 20px 70px 20px;
-    text-align: center;
-    border-bottom: 2px solid #00D4FF;
+/* HEADER IMAGE */
+.header-container {
+    width: 100%;
+    margin: 0;
+    padding: 0;
     margin-bottom: 60px;
-    box-shadow: 0 5px 30px rgba(0, 212, 255, 0.4);
 }
 
-.galactic-tagline {
-    font-family: 'Michroma', sans-serif;
-    font-weight: normal;
-    font-size: 16px;
-    letter-spacing: 8px;
-    text-transform: uppercase;
-    color: rgba(0, 212, 255, 0.95);
-    margin-top: 30px;
-    line-height: 1.6;
-    text-shadow: 0 0 10px rgba(184, 230, 255, 0.7);
+.header-container img {
+    width: 100%;
+    height: auto;
+    display: block;
 }
 
+/* MODULES */
 .modules-wrapper { max-width: 1400px; margin: 0 auto; padding: 40px 30px 80px 30px; }
-.section-title { text-align: center; font-size: 38px; font-weight: 800; color: #FFFFFF; margin-bottom: 55px; text-shadow: 0 0 15px rgba(0, 212, 255, 0.4); }
+.section-title { 
+    text-align: center; 
+    font-size: 38px; 
+    font-weight: 800; 
+    color: #FFFFFF; 
+    margin-bottom: 55px; 
+    text-shadow: 0 0 15px rgba(0, 212, 255, 0.4); 
+}
 
 .card {
     background: linear-gradient(135deg, rgba(0, 25, 50, 0.65) 0%, rgba(0, 15, 30, 0.75) 100%);
@@ -67,7 +61,11 @@ header { visibility: hidden; }
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     height: 100%;
 }
-.card:hover { transform: translateY(-10px); border-color: rgba(0, 212, 255, 0.6); box-shadow: 0 18px 45px rgba(0, 212, 255, 0.3); }
+.card:hover { 
+    transform: translateY(-10px); 
+    border-color: rgba(0, 212, 255, 0.6); 
+    box-shadow: 0 18px 45px rgba(0, 212, 255, 0.3); 
+}
 .card-icon { font-size: 68px; margin-bottom: 26px; transition: transform 0.3s ease; }
 .card:hover .card-icon { transform: scale(1.12); }
 .card-title { font-size: 28px; font-weight: 800; color: #FFFFFF; margin-bottom: 18px; }
@@ -76,6 +74,7 @@ header { visibility: hidden; }
 .list-line { color: #00D4FF; font-size: 13px; margin: 11px 0; padding-left: 22px; position: relative; }
 .list-line::before { content: '→'; position: absolute; left: 0; }
 
+/* STATS */
 .stats-section {
     background: rgba(0, 0, 0, 0.5);
     border-top: 1px solid rgba(0, 212, 255, 0.25);
@@ -91,7 +90,11 @@ header { visibility: hidden; }
     border-radius: 20px;
     transition: all 0.3s ease;
 }
-.stat:hover { border-color: rgba(0, 212, 255, 0.45); transform: translateY(-5px); box-shadow: 0 12px 35px rgba(0, 212, 255, 0.25); }
+.stat:hover { 
+    border-color: rgba(0, 212, 255, 0.45); 
+    transform: translateY(-5px); 
+    box-shadow: 0 12px 35px rgba(0, 212, 255, 0.25); 
+}
 .stat-num {
     font-size: 54px;
     font-weight: 900;
@@ -100,11 +103,27 @@ header { visibility: hidden; }
     -webkit-text-fill-color: transparent;
     margin-bottom: 12px;
 }
-.stat-label { color: rgba(0, 212, 255, 0.75); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+.stat-label { 
+    color: rgba(0, 212, 255, 0.75); 
+    font-size: 12px; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+}
 
+/* ROADMAP */
 .roadmap { max-width: 1200px; margin: 0 auto; padding: 75px 30px; }
-.roadmap-card { background: rgba(0, 25, 50, 0.55); border: 1px solid rgba(0, 212, 255, 0.25); border-radius: 24px; padding: 44px; transition: all 0.3s ease; }
-.roadmap-card:hover { border-color: rgba(0, 212, 255, 0.4); box-shadow: 0 8px 30px rgba(0, 212, 255, 0.2); }
+.roadmap-card { 
+    background: rgba(0, 25, 50, 0.55); 
+    border: 1px solid rgba(0, 212, 255, 0.25); 
+    border-radius: 24px; 
+    padding: 44px; 
+    transition: all 0.3s ease; 
+}
+.roadmap-card:hover { 
+    border-color: rgba(0, 212, 255, 0.4); 
+    box-shadow: 0 8px 30px rgba(0, 212, 255, 0.2); 
+}
 .roadmap-title { font-size: 26px; font-weight: 800; color: #FFFFFF; margin-bottom: 28px; }
 .roadmap-item { color: #64748b; font-size: 15px; margin: 14px 0; padding-left: 32px; position: relative; }
 .roadmap-item.done { color: #00D4FF; }
@@ -112,12 +131,26 @@ header { visibility: hidden; }
 .roadmap-item.done::before { content: '✓ '; position: absolute; left: 0; }
 .roadmap-item.wip::before { content: '⟳ '; position: absolute; left: 0; }
 
-.footer { text-align: center; padding: 70px 30px 50px 30px; margin-top: 100px; border-top: 1px solid rgba(0, 212, 255, 0.25); }
+/* FOOTER */
+.footer { 
+    text-align: center; 
+    padding: 70px 30px 50px 30px; 
+    margin-top: 100px; 
+    border-top: 1px solid rgba(0, 212, 255, 0.25); 
+}
 .footer-brand { font-size: 22px; font-weight: 800; color: #FFFFFF; margin-bottom: 14px; }
 .footer-text { color: #64748b; font-size: 13px; margin: 10px 0; }
-.footer-link { color: #00D4FF; text-decoration: none; margin: 0 18px; font-size: 13px; font-weight: 600; transition: color 0.3s ease; }
+.footer-link { 
+    color: #00D4FF; 
+    text-decoration: none; 
+    margin: 0 18px; 
+    font-size: 13px; 
+    font-weight: 600; 
+    transition: color 0.3s ease; 
+}
 .footer-link:hover { color: #38BDF8; }
 
+/* BUTTONS */
 .stButton > button {
     width: 100%;
     background: linear-gradient(135deg, #00D4FF 0%, #0EA5E9 100%);
@@ -130,75 +163,32 @@ header { visibility: hidden; }
     transition: all 0.3s ease;
     box-shadow: 0 5px 18px rgba(0, 212, 255, 0.3);
 }
-.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4); }
+.stButton > button:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4); 
+}
 
-@media (max-width: 1200px) { .galactic-tagline { font-size: 14px; letter-spacing: 6px; } }
-@media (max-width: 768px) { .galactic-tagline { font-size: 11px; letter-spacing: 4px; } .section-title { font-size: 32px; } }
-@media (max-width: 480px) { .galactic-tagline { font-size: 9px; letter-spacing: 3px; } }
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .section-title { font-size: 32px; }
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════
-# HEADER AVEC SAWAH EN INLINE (SEULE MÉTHODE QUI MARCHE)
+# HEADER IMAGE
 # ═══════════════════════════════════════════════════════
 
 st.markdown("""
-<div class="galactic-header">
-    <h1 style="
-        font-family: 'Sawah Personal Use Only Regular', monospace;
-        font-size: 200px;
-        letter-spacing: 45px;
-        color: #FFFFFF;
-        text-transform: uppercase;
-        margin: 0;
-        padding: 0;
-        line-height: 0.9;
-        text-shadow: 
-            0 0 20px rgba(255, 255, 255, 1),
-            0 0 40px #00D4FF,
-            0 0 70px #00D4FF,
-            0 0 100px rgba(0, 212, 255, 0.8),
-            0 0 130px rgba(0, 212, 255, 0.6);
-        animation: logo-pulse 2s ease-in-out infinite;
-    ">CODEX</h1>
-    <p class="galactic-tagline">
-        Serveur de Soutien et d'Entraide à la Communauté DayZ Francophone
-    </p>
+<div class="header-container">
+    <img src="https://raw.githubusercontent.com/EpSyDev/codex-validateur/main/assets/images/codex_header.png" alt="CODEX Header">
 </div>
-
-<style>
-@keyframes logo-pulse {
-    0%, 100% {
-        text-shadow: 
-            0 0 15px rgba(255, 255, 255, 1),
-            0 0 30px #00D4FF,
-            0 0 50px #00D4FF,
-            0 0 70px rgba(0, 212, 255, 0.7);
-    }
-    50% {
-        text-shadow: 
-            0 0 20px rgba(255, 255, 255, 1),
-            0 0 40px #00D4FF,
-            0 0 70px #00D4FF,
-            0 0 100px rgba(0, 212, 255, 0.9),
-            0 0 130px rgba(0, 212, 255, 0.6);
-    }
-}
-
-/* RESPONSIVE POUR LE H1 INLINE */
-@media (max-width: 1200px) {
-    h1[style*="font-size: 200px"] { font-size: 120px !important; letter-spacing: 32px !important; }
-}
-@media (max-width: 768px) {
-    h1[style*="font-size: 200px"] { font-size: 80px !important; letter-spacing: 20px !important; }
-}
-@media (max-width: 480px) {
-    h1[style*="font-size: 200px"] { font-size: 50px !important; letter-spacing: 12px !important; }
-}
-</style>
 """, unsafe_allow_html=True)
 
+# ═══════════════════════════════════════════════════════
 # MODULES
+# ═══════════════════════════════════════════════════════
+
 st.markdown('<div class="modules-wrapper"><h2 class="section-title">🚀 Modules disponibles</h2>', unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns(3, gap="large")
@@ -256,7 +246,10 @@ with col3:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
+# ═══════════════════════════════════════════════════════
 # STATS
+# ═══════════════════════════════════════════════════════
+
 st.markdown('<div class="stats-section"><h2 class="section-title">📊 Codex en chiffres</h2>', unsafe_allow_html=True)
 
 s1, s2, s3, s4 = st.columns(4)
@@ -271,7 +264,10 @@ with s4:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
+# ═══════════════════════════════════════════════════════
 # ROADMAP
+# ═══════════════════════════════════════════════════════
+
 st.markdown('<div class="roadmap"><h2 class="section-title">🛣️ Roadmap</h2>', unsafe_allow_html=True)
 
 r1, r2 = st.columns(2, gap="large")
@@ -301,7 +297,10 @@ with r2:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
+# ═══════════════════════════════════════════════════════
 # FOOTER
+# ═══════════════════════════════════════════════════════
+
 st.markdown("""
 <div class="footer">
     <div class="footer-brand">CODEX SUITE v3.0</div>
