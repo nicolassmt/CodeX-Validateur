@@ -1,5 +1,5 @@
 """
-detector.py
+detector.py - VERSION CORRIGÉE
 Détection automatique du format et type de fichier DayZ
 Supporte 17+ types de fichiers XML et JSON
 """
@@ -50,8 +50,9 @@ class DayZFileDetector:
         },
         'cfgspawnabletypes.xml': {
             'root': 'spawnabletypes',
-            'child': 'damage',
-            'description': 'Spawnable types configuration'
+            'child': 'type',  # ✅ CORRIGÉ : était 'damage'
+            'child_attribute': 'name',
+            'description': 'Spawnable types configuration (attachments & cargo)'
         },
         'mapgrouppos.xml': {
             'root': 'map',
@@ -113,6 +114,11 @@ class DayZFileDetector:
             'root_keys': ['weather'],
             'required_fields': ['enable', 'startWeather'],
             'description': 'Weather configuration'
+        },
+        'cfggameplay.json': {
+            'root_keys': ['GeneralData', 'PlayerData', 'StaminaData'],
+            'required_fields': [],
+            'description': 'Gameplay configuration'
         }
     }
     
@@ -173,7 +179,7 @@ class DayZFileDetector:
                                     confidence = 1.0
                     
                     # Bonus si le filename correspond
-                    if filename and file_type in filename.lower():
+                    if filename and file_type.replace('.xml', '') in filename.lower():
                         confidence = min(1.0, confidence + 0.05)
                     
                     return {
@@ -237,24 +243,26 @@ class DayZFileDetector:
                         root_data = data[root_key]
                         if isinstance(root_data, dict):
                             required_fields = signature.get('required_fields', [])
-                            matching_fields = sum(1 for field in required_fields if field in root_data)
-                            if matching_fields == len(required_fields):
-                                confidence = 1.0
-                            elif matching_fields > 0:
-                                confidence = 0.85
+                            if required_fields:
+                                matching_fields = sum(1 for field in required_fields if field in root_data)
+                                if matching_fields == len(required_fields):
+                                    confidence = 1.0
+                                elif matching_fields > 0:
+                                    confidence = 0.85
                         elif isinstance(root_data, list) and len(root_data) > 0:
                             # Vérifier le premier élément
                             first_item = root_data[0]
                             if isinstance(first_item, dict):
                                 required_fields = signature.get('required_fields', [])
-                                matching_fields = sum(1 for field in required_fields if field in first_item)
-                                if matching_fields == len(required_fields):
-                                    confidence = 1.0
-                                elif matching_fields > 0:
-                                    confidence = 0.85
+                                if required_fields:
+                                    matching_fields = sum(1 for field in required_fields if field in first_item)
+                                    if matching_fields == len(required_fields):
+                                        confidence = 1.0
+                                    elif matching_fields > 0:
+                                        confidence = 0.85
                         
                         # Bonus si le filename correspond
-                        if filename and file_type in filename.lower():
+                        if filename and file_type.replace('.json', '') in filename.lower():
                             confidence = min(1.0, confidence + 0.05)
                         
                         if confidence > 0.8:
