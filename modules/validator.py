@@ -8,8 +8,8 @@ import json
 import xml.etree.ElementTree as ET
 import re
 import os
-from errors_matcher import match_error
-from corrector import auto_correct, can_auto_correct
+from modules.errors_matcher import match_error
+from modules.corrector import auto_correct, can_auto_correct
 
 
 # ==============================
