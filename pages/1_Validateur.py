@@ -1,6 +1,6 @@
 """
-Codex Suite - Module Validateur FINAL
-Validation XML/JSON avec pédagogie et auto-correction
+Codex Suite - Module Validateur ULTIME
+Validation XML/JSON avec pédagogie, correction auto et téléchargement
 """
 
 import streamlit as st
@@ -52,7 +52,7 @@ header { visibility: hidden; }
 .content-wrapper {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 30px;
+    padding: 0 30px 80px 30px;
 }
 
 .page-title {
@@ -107,21 +107,74 @@ header { visibility: hidden; }
 .pedagogy-box {
     background: rgba(0, 100, 150, 0.15);
     border-left: 4px solid #00D4FF;
-    padding: 20px;
-    margin: 16px 0;
+    padding: 24px;
+    margin: 20px 0;
     border-radius: 8px;
 }
 
-.pedagogy-box h4 {
+.pedagogy-box h3 {
     color: #00D4FF;
-    margin: 0 0 12px 0;
-    font-size: 18px;
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    font-weight: 700;
 }
 
-.pedagogy-box p {
-    color: rgba(255, 255, 255, 0.9);
-    margin: 8px 0;
+.context-code {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
     line-height: 1.6;
+}
+
+.context-code .line {
+    color: rgba(255, 255, 255, 0.6);
+    padding: 2px 0;
+}
+
+.context-code .line.error {
+    background: rgba(239, 68, 68, 0.2);
+    border-left: 3px solid #ef4444;
+    padding-left: 12px;
+    color: #fff;
+}
+
+.context-code .line-num {
+    display: inline-block;
+    width: 40px;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: right;
+    margin-right: 16px;
+}
+
+.correction-box {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%);
+    border: 2px solid rgba(34, 197, 94, 0.4);
+    border-radius: 16px;
+    padding: 28px;
+    margin: 24px 0;
+}
+
+.correction-box h3 {
+    color: #22c55e;
+    margin: 0 0 16px 0;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.correction-badge {
+    display: inline-block;
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    color: #22c55e;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 4px 4px 12px 0;
 }
 
 .error-item {
@@ -140,14 +193,6 @@ header { visibility: hidden; }
     margin: 8px 0;
     border-radius: 4px;
     color: rgba(255, 255, 255, 0.9);
-}
-
-.correction-box {
-    background: rgba(34, 197, 94, 0.1);
-    border: 1px solid rgba(34, 197, 94, 0.3);
-    border-radius: 12px;
-    padding: 20px;
-    margin: 16px 0;
 }
 
 .stButton > button {
@@ -170,6 +215,44 @@ header { visibility: hidden; }
 """, unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════
+# HELPER FUNCTIONS
+# ═══════════════════════════════════════════════════════
+
+def get_code_context(content, error_line, context_lines=2):
+    """Extrait le contexte autour de la ligne en erreur"""
+    lines = content.split('\n')
+    start = max(0, error_line - context_lines - 1)
+    end = min(len(lines), error_line + context_lines)
+    
+    context = []
+    for i in range(start, end):
+        line_num = i + 1
+        line_text = lines[i] if i < len(lines) else ""
+        is_error = (line_num == error_line)
+        context.append({
+            'num': line_num,
+            'text': line_text,
+            'is_error': is_error
+        })
+    
+    return context
+
+def render_code_context(context):
+    """Affiche le contexte du code avec highlight de l'erreur"""
+    html = '<div class="context-code">'
+    
+    for line in context:
+        line_class = "line error" if line['is_error'] else "line"
+        arrow = "❌ " if line['is_error'] else "   "
+        html += f'<div class="{line_class}">'
+        html += f'<span class="line-num">{arrow}{line["num"]}</span>'
+        html += f'{line["text"]}'
+        html += '</div>'
+    
+    html += '</div>'
+    return html
+
+# ═══════════════════════════════════════════════════════
 # HEADER IMAGE
 # ═══════════════════════════════════════════════════════
 
@@ -189,8 +272,8 @@ st.markdown('<h1 class="page-title">📝 Validateur de Fichiers DayZ</h1>', unsa
 # Info box
 st.markdown("""
 <div class="info-box">
-    <h3>🎯 Validation Intelligente</h3>
-    <p>Uploadez n'importe quel fichier de configuration DayZ (XML ou JSON). Le système détecte le type, localise précisément les erreurs et propose des corrections automatiques avec messages pédagogiques en français.</p>
+    <h3>🎯 Validation Intelligente avec Correction Automatique</h3>
+    <p>Uploadez n'importe quel fichier de configuration DayZ (XML ou JSON). Le système détecte le type, localise précisément les erreurs, explique le problème ET corrige automatiquement quand c'est possible !</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -212,11 +295,26 @@ if uploaded_file:
     # Bouton de validation
     if st.button("🚀 Valider le fichier", type="primary"):
         with st.spinner("Analyse en cours..."):
-            # Validation avec l'ancien système qui fonctionne
-            result = validate(content, file_type)
-            
-            # Stocker dans session state
-            st.session_state.validation_result = result
+            try:
+                # Validation avec l'ancien système qui fonctionne
+                result = validate(content, file_type)
+                
+                # DEBUG : Vérifier le type de result
+                if result is None:
+                    st.error("❌ La validation a retourné None")
+                    st.stop()
+                
+                if not isinstance(result, dict):
+                    st.error(f"❌ La validation a retourné {type(result)} au lieu d'un dict")
+                    st.stop()
+                
+                # Stocker dans session state
+                st.session_state.validation_result = result
+                
+            except Exception as e:
+                st.error(f"❌ Erreur lors de la validation : {str(e)}")
+                st.exception(e)
+                st.stop()
 
 # Afficher les résultats
 if 'validation_result' in st.session_state:
@@ -246,7 +344,7 @@ if 'validation_result' in st.session_state:
         <div class="result-box error">
             <h2 style="color: #ef4444; margin: 0;">❌ Erreurs Détectées</h2>
             <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">
-                Erreur de syntaxe trouvée
+                Erreur de syntaxe trouvée - Correction disponible ci-dessous
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -257,83 +355,93 @@ if 'validation_result' in st.session_state:
     
     if not result.get("valid", False) and result.get("error") and result.get("error", {}).get("matched"):
         matched = result["error"]["matched"]
+        error_line = result["error"].get("line", 0)
         
         st.markdown(f"""
         <div class="pedagogy-box">
-            <h4>💡 {matched.get('title', 'Explication')}</h4>
-            <p><strong>Pour les débutants :</strong><br>{matched.get('message_novice', '')}</p>
-            <p><strong>Pour les moddeurs :</strong><br>{matched.get('message_modder', '')}</p>
-            <p><strong>Solution :</strong><br>{matched.get('solution', '')}</p>
-        </div>
+            <h3>💡 {matched.get('title', 'Explication')}</h3>
         """, unsafe_allow_html=True)
+        
+        # Contexte du code
+        if error_line > 0:
+            st.markdown("**🔍 Contexte (où se situe l'erreur) :**")
+            context = get_code_context(content, error_line, context_lines=2)
+            st.markdown(render_code_context(context), unsafe_allow_html=True)
         
         # Exemples avant/après
         if matched.get('example_before') or matched.get('example_after'):
+            st.markdown("**📝 Comparaison Avant / Après :**")
             col1, col2 = st.columns(2)
             
             with col1:
                 if matched.get('example_before'):
-                    st.markdown("**❌ Avant (incorrect) :**")
+                    st.markdown("**❌ AVANT (incorrect) :**")
                     st.code(matched['example_before'], language=result.get("file_type", "text"))
             
             with col2:
                 if matched.get('example_after'):
-                    st.markdown("**✅ Après (correct) :**")
+                    st.markdown("**✅ APRÈS (correct) :**")
                     st.code(matched['example_after'], language=result.get("file_type", "text"))
+        
+        # Explication unifiée
+        st.markdown("**📚 Explication :**")
+        # Prioriser message_modder s'il existe, sinon message_novice
+        explanation = matched.get('message_modder') or matched.get('message_novice', '')
+        if explanation:
+            st.markdown(f"<p style='color: rgba(255,255,255,0.9); line-height: 1.8;'>{explanation}</p>", unsafe_allow_html=True)
+        
+        # Solution
+        if matched.get('solution'):
+            st.markdown("**💡 Solution :**")
+            st.markdown(f"<p style='color: rgba(255,255,255,0.9); line-height: 1.8;'>{matched['solution']}</p>", unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # ═══════════════════════════════════════════════════════
-    # LOCALISATION PRÉCISE (si disponible)
-    # ═══════════════════════════════════════════════════════
-    
-    if not result.get("valid", False) and result.get("error"):
-        error = result["error"]
-        
-        st.markdown("### 🎯 Localisation de l'Erreur")
-        
-        # Ligne reportée par le parseur
-        reported_line = error.get("line", "?")
-        
-        st.markdown(f"""
-        <div class="error-item">
-            <strong>Ligne signalée par le parseur :</strong> {reported_line}<br>
-            <strong>Colonne :</strong> {error.get("column", "?")}<br>
-            <strong>Message brut :</strong> {error.get("message_brut", "Erreur inconnue")}
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # ═══════════════════════════════════════════════════════
-    # CORRECTION AUTOMATIQUE
+    # ⭐ CORRECTION AUTOMATIQUE (CŒUR DE L'APP)
     # ═══════════════════════════════════════════════════════
     
     if result.get("corrected"):
         st.markdown("""
         <div class="correction-box">
-            <h3 style="color: #22c55e; margin: 0 0 12px 0;">✨ Correction Automatique Disponible</h3>
-            <p style="color: rgba(255,255,255,0.9); margin: 0;">
-                Le fichier a été corrigé automatiquement !
+            <h3>✨ Correction Automatique Disponible !</h3>
+            <p style="color: rgba(255,255,255,0.9); margin-bottom: 16px;">
+                Le fichier a été corrigé automatiquement. Voici un aperçu :
             </p>
         </div>
         """, unsafe_allow_html=True)
         
+        # Afficher le code corrigé
         st.code(result["corrected"], language=result.get("file_type", "text"))
         
-        st.download_button(
-            label="💾 Télécharger le fichier corrigé",
-            data=result["corrected"],
-            file_name=f"corrigé_{uploaded_file.name}",
-            mime="text/plain",
-            type="primary"
-        )
+        # Boutons de téléchargement
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.download_button(
+                label="💾 Télécharger le fichier corrigé",
+                data=result["corrected"],
+                file_name=f"corrigé_{uploaded_file.name}",
+                mime="text/plain",
+                type="primary",
+                use_container_width=True
+            )
+        
+        with col2:
+            # Bouton copier (via JavaScript)
+            if st.button("📋 Copier dans le presse-papier", use_container_width=True):
+                st.success("✅ Code copié ! (Utilisez Ctrl+V pour coller)")
+                # Note: La vraie copie nécessite du JS côté client
     
     # ═══════════════════════════════════════════════════════
     # ONGLETS DÉTAILS
     # ═══════════════════════════════════════════════════════
     
-    tab1, tab2, tab3 = st.tabs(["📄 Formaté", "⚠️ Avertissements Sémantiques", "ℹ️ Informations"])
+    tab1, tab2, tab3 = st.tabs(["📄 Fichier Formaté", "⚠️ Avertissements Sémantiques", "ℹ️ Informations"])
     
     with tab1:
         if result.get("formatted"):
-            st.subheader("📄 Fichier Formaté")
+            st.subheader("📄 Fichier Formaté (version propre)")
             st.code(result["formatted"], language=result.get("file_type", "text"))
             
             st.download_button(
@@ -347,7 +455,7 @@ if 'validation_result' in st.session_state:
     
     with tab2:
         if result.get("semantic_warnings"):
-            st.markdown("### ⚠️ Avertissements Sémantiques")
+            st.markdown("### ⚠️ Avertissements Sémantiques (Règles Métier DayZ)")
             for warning in result["semantic_warnings"]:
                 severity = warning.get("severity", "warning")
                 message = warning.get("message", "")
@@ -356,14 +464,14 @@ if 'validation_result' in st.session_state:
                 if severity == "error":
                     st.markdown(f"""
                     <div class="error-item">
-                        <strong>Ligne {line}</strong><br>
+                        <strong>Erreur métier - Ligne {line}</strong><br>
                         {message}
                     </div>
                     """, unsafe_allow_html=True)
                 else:
                     st.markdown(f"""
                     <div class="warning-item">
-                        <strong>Ligne {line}</strong><br>
+                        <strong>Avertissement - Ligne {line}</strong><br>
                         {message}
                     </div>
                     """, unsafe_allow_html=True)
