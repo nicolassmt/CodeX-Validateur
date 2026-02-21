@@ -1,233 +1,474 @@
 """
-base_validator.py
-Classe de base abstraite pour tous les validateurs DayZ
-Définit l'interface commune et les méthodes utilitaires
+validator.py
+Valide un fichier XML ou JSON
+Retourne un objet structuré : valide ou pas, erreur matchée, ligne/colonne, ET correction auto si possible
 """
 
-from abc import ABC, abstractmethod
-from typing import List, Dict, Optional
 import json
+import xml.etree.ElementTree as ET
+import re
 import os
+from errors_matcher import match_error
+from corrector import auto_correct, can_auto_correct
 
 
-class ValidationError:
-    """Représente une erreur de validation"""
+# ==============================
+# ✨ NOUVEAU : CHARGEMENT SCHÉMAS
+# ==============================
+def load_schema(file_type, version="1.28"):
+    """
+    Charge un schéma de validation JSON pour un type de fichier DayZ.
     
-    def __init__(self, severity: str, message: str, line: Optional[int] = None, 
-                 column: Optional[int] = None, field: Optional[str] = None,
-                 suggestion: Optional[str] = None, context: Optional[str] = None):
-        self.severity = severity  # 'error', 'warning', 'info'
-        self.message = message
-        self.line = line
-        self.column = column
-        self.field = field
-        self.suggestion = suggestion
-        self.context = context
+    Args:
+        file_type (str): Type de fichier ('types', 'events', 'economy')
+        version (str): Version DayZ (par défaut '1.28')
     
-    def to_dict(self) -> Dict:
-        """Convertit en dictionnaire"""
-        return {
-            'severity': self.severity,
-            'message': self.message,
-            'line': self.line,
-            'column': self.column,
-            'field': self.field,
-            'suggestion': self.suggestion,
-            'context': self.context
-        }
+    Returns:
+        dict: Schéma de validation JSON ou None si erreur
+    """
+    # Chemin relatif depuis la racine du projet
+    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    schema_path = os.path.join(base_path, f"schemas/dayz_{version}/{file_type}.json")
     
-    def __repr__(self):
-        location = f"L{self.line}" if self.line else "?"
-        return f"[{self.severity.upper()}] {location}: {self.message}"
+    try:
+        with open(schema_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"⚠️ Schéma non trouvé : {schema_path}")
+        return None
+    except json.JSONDecodeError as e:
+        print(f"❌ Erreur de lecture du schéma : {e}")
+        return None
 
 
-class BaseValidator(ABC):
-    """Classe de base abstraite pour tous les validateurs DayZ"""
+# ==============================
+# ✨ NOUVEAU : DÉTECTION TYPE FICHIER
+# ==============================
+def detect_dayz_file_type(content):
+    """
+    Détecte automatiquement le type de fichier DayZ (types, events, economy, globals, messages).
     
-    def __init__(self, file_type: str, version: str = '1.28'):
-        """
-        Initialise le validateur
-        
-        Args:
-            file_type: Type de fichier (ex: 'types', 'events', 'globals')
-            version: Version DayZ (ex: '1.28')
-        """
-        self.file_type = file_type
-        self.version = version
-        self.schema = self.load_schema()
-        self.errors: List[ValidationError] = []
+    Args:
+        content (str): Contenu XML du fichier
     
-    def load_schema(self) -> Optional[Dict]:
-        """
-        Charge le schéma de validation JSON pour ce type de fichier
+    Returns:
+        str: Type détecté ('types', 'events', 'economy', 'globals', 'messages') ou None
+    """
+    try:
+        root = ET.fromstring(content)
+        root_tag = root.tag
         
-        Returns:
-            dict: Schéma de validation ou None si non trouvé
-        """
-        # Chemin vers le schéma
-        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        schema_path = os.path.join(base_path, f"schemas/dayz_{self.version}/{self.file_type}.json")
+        # Détection par balise racine
+        if root_tag == "types":
+            return "types"
+        elif root_tag == "events":
+            return "events"
+        elif root_tag == "economy":
+            return "economy"
+        elif root_tag == "variables":
+            return "globals"
+        elif root_tag == "messages":
+            return "messages"
         
-        try:
-            with open(schema_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except FileNotFoundError:
-            # Schéma non disponible, continuer sans
-            return None
-        except json.JSONDecodeError as e:
-            print(f"⚠️ Erreur lecture schéma {schema_path}: {e}")
-            return None
+        return None
+    except:
+        return None
+
+
+# ==============================
+# ✨ NOUVEAU : VALIDATION SÉMANTIQUE
+# ==============================
+def validate_semantic_rules(content, file_type):
+    """
+    Valide un fichier XML selon les règles métier DayZ (validation sémantique).
     
-    def validate(self, content: str) -> List[ValidationError]:
-        """
-        Validation complète du fichier
-        
-        Args:
-            content: Contenu du fichier à valider
-        
-        Returns:
-            list: Liste d'erreurs de validation
-        """
-        self.errors = []
-        
-        # 1. Validation syntaxe (XML ou JSON)
-        self.errors.extend(self.validate_syntax(content))
-        
-        # Si erreur de syntaxe, arrêter (impossible de valider la structure)
-        if any(e.severity == 'error' for e in self.errors):
-            return self.errors
-        
-        # 2. Validation structure
-        self.errors.extend(self.validate_structure(content))
-        
-        # 3. Validation business rules
-        self.errors.extend(self.validate_business_rules(content))
-        
-        # 4. Validation custom (sous-classes peuvent override)
-        self.errors.extend(self.validate_custom(content))
-        
-        return self.errors
+    Args:
+        content (str): Contenu XML du fichier
+        file_type (str): Type de fichier ('types', 'events', 'economy', 'globals')
     
-    @abstractmethod
-    def validate_syntax(self, content: str) -> List[ValidationError]:
-        """
-        Valide la syntaxe du fichier (XML ou JSON)
-        DOIT être implémenté par les sous-classes
-        
-        Args:
-            content: Contenu du fichier
-        
-        Returns:
-            list: Erreurs de syntaxe
-        """
-        pass
-    
-    @abstractmethod
-    def validate_structure(self, content: str) -> List[ValidationError]:
-        """
-        Valide la structure du fichier (éléments requis, types, etc.)
-        DOIT être implémenté par les sous-classes
-        
-        Args:
-            content: Contenu du fichier
-        
-        Returns:
-            list: Erreurs de structure
-        """
-        pass
-    
-    @abstractmethod
-    def validate_business_rules(self, content: str) -> List[ValidationError]:
-        """
-        Valide les règles métier DayZ (min ≤ nominal, etc.)
-        DOIT être implémenté par les sous-classes
-        
-        Args:
-            content: Contenu du fichier
-        
-        Returns:
-            list: Erreurs de règles métier
-        """
-        pass
-    
-    def validate_custom(self, content: str) -> List[ValidationError]:
-        """
-        Validation custom optionnelle (override si nécessaire)
-        
-        Args:
-            content: Contenu du fichier
-        
-        Returns:
-            list: Erreurs custom
-        """
+    Returns:
+        list: Liste de warnings/erreurs sémantiques
+            [{"severity": "error"|"warning", "message": "...", "line": int}]
+    """
+    schema = load_schema(file_type)
+    if not schema:
         return []
     
-    def add_error(self, severity: str, message: str, **kwargs):
-        """Ajoute une erreur à la liste"""
-        error = ValidationError(severity, message, **kwargs)
-        self.errors.append(error)
+    warnings = []
     
-    def get_errors(self, severity: Optional[str] = None) -> List[ValidationError]:
-        """
-        Retourne les erreurs, optionnellement filtrées par sévérité
+    try:
+        tree = ET.fromstring(content)
         
-        Args:
-            severity: 'error', 'warning', 'info' ou None pour toutes
+        # VALIDATION TYPES.XML
+        if file_type == "types":
+            warnings.extend(_validate_types_semantic(tree, schema))
         
-        Returns:
-            list: Erreurs filtrées
-        """
-        if severity:
-            return [e for e in self.errors if e.severity == severity]
-        return self.errors
+        # VALIDATION EVENTS.XML
+        elif file_type == "events":
+            warnings.extend(_validate_events_semantic(tree, schema))
+        
+        # VALIDATION ECONOMY.XML
+        elif file_type == "economy":
+            warnings.extend(_validate_economy_semantic(tree, schema))
+        
+    except ET.ParseError:
+        # Si parsing échoue, pas de validation sémantique (déjà géré par validate_xml)
+        pass
     
-    def has_errors(self) -> bool:
-        """Retourne True s'il y a au moins une erreur (severity='error')"""
-        return any(e.severity == 'error' for e in self.errors)
+    return warnings
+
+
+# ==============================
+# ✨ VALIDATION SÉMANTIQUE : TYPES.XML
+# ==============================
+def _validate_types_semantic(root, schema):
+    """Valide les règles métier de types.xml"""
+    warnings = []
     
-    def get_summary(self) -> Dict:
-        """
-        Retourne un résumé de la validation
+    for idx, type_elem in enumerate(root.findall('type'), start=1):
+        item_name = type_elem.get('name', f'Item #{idx}')
         
-        Returns:
-            dict: {
-                'valid': bool,
-                'num_errors': int,
-                'num_warnings': int,
-                'num_info': int,
-                'errors': list
-            }
-        """
-        return {
-            'valid': not self.has_errors(),
-            'num_errors': len([e for e in self.errors if e.severity == 'error']),
-            'num_warnings': len([e for e in self.errors if e.severity == 'warning']),
-            'num_info': len([e for e in self.errors if e.severity == 'info']),
-            'errors': [e.to_dict() for e in self.errors]
+        # Récupérer les valeurs
+        nominal = int(type_elem.findtext('nominal', '0'))
+        min_val = int(type_elem.findtext('min', '0'))
+        quantmin = int(type_elem.findtext('quantmin', '-1'))
+        quantmax = int(type_elem.findtext('quantmax', '-1'))
+        lifetime = int(type_elem.findtext('lifetime', '0'))
+        
+        # RÈGLE 1: min ≤ nominal
+        if min_val > nominal:
+            warnings.append({
+                "severity": "error",
+                "message": f"Item '{item_name}': min ({min_val}) > nominal ({nominal}). Le minimum ne peut pas être supérieur au nominal.",
+                "line": idx
+            })
+        
+        # RÈGLE 2: quantmin ≤ quantmax
+        if quantmin != -1 and quantmax != -1 and quantmin > quantmax:
+            warnings.append({
+                "severity": "error",
+                "message": f"Item '{item_name}': quantmin ({quantmin}) > quantmax ({quantmax}). La quantité minimum ne peut pas être supérieure au maximum.",
+                "line": idx
+            })
+        
+        # RÈGLE 3: lifetime > 0
+        if lifetime <= 0:
+            warnings.append({
+                "severity": "error",
+                "message": f"Item '{item_name}': lifetime ({lifetime}) doit être > 0.",
+                "line": idx
+            })
+        
+        # RÈGLE 4: Item désactivé mais min > 0
+        if nominal == 0 and min_val > 0:
+            warnings.append({
+                "severity": "warning",
+                "message": f"Item '{item_name}': nominal=0 (désactivé) mais min={min_val}. Recommandation : mettre min=0.",
+                "line": idx
+            })
+        
+        # RÈGLE 5: Pas de <usage> = pas de spawn
+        usages = type_elem.findall('usage')
+        if nominal > 0 and len(usages) == 0:
+            flags = type_elem.find('flags')
+            crafted = flags.get('crafted', '0') if flags is not None else '0'
+            if crafted == '0':
+                warnings.append({
+                    "severity": "warning",
+                    "message": f"Item '{item_name}': nominal={nominal} mais aucun <usage> défini. Cet item ne spawnera pas naturellement.",
+                    "line": idx
+                })
+    
+    return warnings
+
+
+# ==============================
+# ✨ VALIDATION SÉMANTIQUE : EVENTS.XML
+# ==============================
+def _validate_events_semantic(root, schema):
+    """Valide les règles métier de events.xml"""
+    warnings = []
+    
+    for idx, event_elem in enumerate(root.findall('event'), start=1):
+        event_name = event_elem.get('name', f'Event #{idx}')
+        
+        # Récupérer les valeurs
+        nominal = int(event_elem.findtext('nominal', '0'))
+        min_val = int(event_elem.findtext('min', '0'))
+        max_val = int(event_elem.findtext('max', '0'))
+        lifetime = int(event_elem.findtext('lifetime', '0'))
+        active = int(event_elem.findtext('active', '1'))
+        
+        # RÈGLE 1: min ≤ nominal ≤ max
+        if not (min_val <= nominal <= max_val):
+            warnings.append({
+                "severity": "error",
+                "message": f"Event '{event_name}': La relation min ({min_val}) ≤ nominal ({nominal}) ≤ max ({max_val}) n'est pas respectée.",
+                "line": idx
+            })
+        
+        # RÈGLE 2: lifetime > 0
+        if lifetime <= 0:
+            warnings.append({
+                "severity": "error",
+                "message": f"Event '{event_name}': lifetime ({lifetime}) doit être > 0.",
+                "line": idx
+            })
+        
+        # RÈGLE 3: Event désactivé
+        if active == 0:
+            warnings.append({
+                "severity": "warning",
+                "message": f"Event '{event_name}': active=0 (désactivé). Est-ce voulu ?",
+                "line": idx
+            })
+        
+        # RÈGLE 4: Children min/max
+        for child in event_elem.findall('.//child'):
+            child_type = child.get('type', 'unknown')
+            child_min = int(child.get('min', '0'))
+            child_max = int(child.get('max', '0'))
+            lootmin = int(child.get('lootmin', '0'))
+            lootmax = int(child.get('lootmax', '0'))
+            
+            if child_min > child_max:
+                warnings.append({
+                    "severity": "error",
+                    "message": f"Event '{event_name}', child '{child_type}': min ({child_min}) > max ({child_max}).",
+                    "line": idx
+                })
+            
+            if lootmin > lootmax:
+                warnings.append({
+                    "severity": "error",
+                    "message": f"Event '{event_name}', child '{child_type}': lootmin ({lootmin}) > lootmax ({lootmax}).",
+                    "line": idx
+                })
+    
+    return warnings
+
+
+# ==============================
+# ✨ VALIDATION SÉMANTIQUE : ECONOMY.XML
+# ==============================
+def _validate_economy_semantic(root, schema):
+    """Valide les règles métier de economy.xml"""
+    warnings = []
+    
+    # Vérifier building respawn=0
+    building = root.find('building')
+    if building is not None:
+        respawn = building.get('respawn', '0')
+        if respawn != '0':
+            warnings.append({
+                "severity": "error",
+                "message": f"Système 'building': respawn doit être 0 (les bases ne doivent PAS respawner). Actuellement : {respawn}",
+                "line": 0
+            })
+    
+    # Vérifier player = 1 1 1 1
+    player = root.find('player')
+    if player is not None:
+        init = player.get('init', '0')
+        load = player.get('load', '0')
+        respawn = player.get('respawn', '0')
+        save = player.get('save', '0')
+        
+        if not (init == '1' and load == '1' and respawn == '1' and save == '1'):
+            warnings.append({
+                "severity": "warning",
+                "message": f"Système 'player': configuration inhabituelle détectée. Vanilla recommandé : init='1' load='1' respawn='1' save='1'. Actuel : init='{init}' load='{load}' respawn='{respawn}' save='{save}'",
+                "line": 0
+            })
+    
+    # Vérifier systèmes critiques (dynamic, vehicles, building)
+    for system_name in ['dynamic', 'vehicles', 'building']:
+        system = root.find(system_name)
+        if system is not None:
+            save = system.get('save', '0')
+            load = system.get('load', '0')
+            
+            if save == '0' or load == '0':
+                warnings.append({
+                    "severity": "warning",
+                    "message": f"Système CRITIQUE '{system_name}': save={save} ou load={load} détecté. ATTENTION : perte de données au restart !",
+                    "line": 0
+                })
+            
+            # Incohérence load=1 sans save=1
+            if load == '1' and save == '0':
+                warnings.append({
+                    "severity": "warning",
+                    "message": f"Système '{system_name}': load=1 mais save=0. Rien ne sera sauvegardé, donc rien à charger. Est-ce voulu ?",
+                    "line": 0
+                })
+    
+    return warnings
+
+
+# ==============================
+# RÉSULTAT — Structure de retour
+# ==============================
+# Tout passe par ce dictionnaire. app.py ne lit que ça.
+#
+# {
+#     "valid": bool,
+#     "file_type": "xml" ou "json",
+#     "dayz_type": str ou None,          → ✨ NOUVEAU : type DayZ détecté
+#     "error": {
+#         "line": int,
+#         "column": int,
+#         "message_brut": str,
+#         "matched": dict ou None,
+#     },
+#     "formatted": str ou None,
+#     "corrected": str ou None,
+#     "semantic_warnings": list ou None   → ✨ NOUVEAU : warnings sémantiques
+# }
+
+
+# ==============================
+# VALIDATION JSON
+# ==============================
+def validate_json(content):
+    """Valide du contenu JSON. Retourne le dict de résultat."""
+    result = {
+        "valid": False,
+        "file_type": "json",
+        "dayz_type": None,
+        "error": None,
+        "formatted": None,
+        "corrected": None,
+        "semantic_warnings": None
+    }
+
+    try:
+        data = json.loads(content)
+        # Valide → on formate proprement
+        result["valid"] = True
+        result["formatted"] = json.dumps(data, indent=2, ensure_ascii=False)
+        return result
+
+    except json.JSONDecodeError as e:
+        matched = match_error(content, e, "json")
+        
+        result["error"] = {
+            "line": e.lineno,
+            "column": e.colno,
+            "message_brut": e.msg,
+            "matched": matched
         }
+        
+        # Tenter la correction automatique si possible
+        if matched and can_auto_correct(matched):
+            correction = auto_correct(content, "json")
+            if correction["has_changes"]:
+                result["corrected"] = correction["corrected"]
+        
+        return result
+
+
+# ==============================
+# VALIDATION XML
+# ==============================
+def validate_xml(content):
+    """Valide du contenu XML. Retourne le dict de résultat."""
+    result = {
+        "valid": False,
+        "file_type": "xml",
+        "dayz_type": None,
+        "error": None,
+        "formatted": None,
+        "corrected": None,
+        "semantic_warnings": None
+    }
+
+    try:
+        root = ET.fromstring(content)
+        
+        # ✨ NOUVEAU : Détection type DayZ
+        dayz_type = detect_dayz_file_type(content)
+        result["dayz_type"] = dayz_type
+        
+        # Valide → on formate avec indentation
+        result["valid"] = True
+        result["formatted"] = _format_xml(content)
+        
+        # ✨ NOUVEAU : Validation sémantique si type DayZ détecté
+        if dayz_type in ['types', 'events', 'economy']:
+            semantic_warnings = validate_semantic_rules(content, dayz_type)
+            if semantic_warnings:
+                result["semantic_warnings"] = semantic_warnings
+        
+        return result
+
+    except ET.ParseError as e:
+        line, col = e.position
+        matched = match_error(content, e, "xml")
+        
+        result["error"] = {
+            "line": line,
+            "column": col,
+            "message_brut": str(e),
+            "matched": matched
+        }
+        
+        # Tenter la correction automatique si possible
+        if matched and can_auto_correct(matched):
+            correction = auto_correct(content, "xml")
+            if correction["has_changes"]:
+                result["corrected"] = correction["corrected"]
+        
+        return result
+
+
+# ==============================
+# FORMATAGE XML
+# ==============================
+def _format_xml(content):
+    """Formate du XML avec indentation propre"""
+    try:
+        from xml.dom import minidom
+        pretty = minidom.parseString(content).toprettyxml(indent="    ")
+        # Supprime les lignes vides et la déclaration XML en double
+        lines = [line for line in pretty.split("\n") if line.strip()]
+        return "\n".join(lines)
+    except:
+        # Si le formatage échoue, on retourne tel quel
+        return content
+
+
+# ==============================
+# FONCTION PRINCIPALE
+# ==============================
+def validate(content, file_type):
+    """
+    Fonction principale appelée par app.py
     
-    # ==============================
-    # MÉTHODES UTILITAIRES
-    # ==============================
+    Paramètres :
+        content   → contenu brut du fichier (string)
+        file_type → "json" ou "xml"
     
-    def safe_int(self, value: str, default: int = 0) -> int:
-        """Convertit une string en int de manière sûre"""
-        try:
-            return int(value)
-        except (ValueError, TypeError):
-            return default
+    Retourne :
+        dict structuré (voir commentaire en haut du fichier)
+    """
+    if file_type == "json":
+        return validate_json(content)
+    elif file_type == "xml":
+        return validate_xml(content)
     
-    def safe_float(self, value: str, default: float = 0.0) -> float:
-        """Convertit une string en float de manière sûre"""
-        try:
-            return float(value)
-        except (ValueError, TypeError):
-            return default
-    
-    def is_in_range(self, value: int, min_val: int, max_val: int) -> bool:
-        """Vérifie si une valeur est dans un range"""
-        return min_val <= value <= max_val
-    
-    def validate_enum(self, value: str, allowed_values: List[str]) -> bool:
-        """Vérifie si une valeur fait partie d'une énumération"""
-        return value in allowed_values
+    # Type inconnu
+    return {
+        "valid": False,
+        "file_type": file_type,
+        "dayz_type": None,
+        "error": {
+            "line": 0,
+            "column": 0,
+            "message_brut": "Type de fichier non supporté",
+            "matched": None
+        },
+        "formatted": None,
+        "corrected": None,
+        "semantic_warnings": None
+    }
